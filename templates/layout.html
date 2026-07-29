@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Finance Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-mark">&#9670;</span>
+                <span class="brand-name">Household Finance</span>
+            </div>
+            <nav>
+                <a href="{{ url_for('index') }}" class="{{ 'active' if request.path == url_for('index') else '' }}">
+                    Dashboard
+                </a>
+                <a href="{{ url_for('income_page') }}" class="{{ 'active' if request.path == url_for('income_page') else '' }}">
+                    Income
+                </a>
+                <a href="{{ url_for('expenses_page') }}" class="{{ 'active' if request.path == url_for('expenses_page') else '' }}">
+                    Expenses
+                </a>
+                <a href="#" class="disabled">Debts</a>
+                <a href="#" class="disabled">Investments</a>
+            </nav>
+        </aside>
+        <div class="content">
+            <main>
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <ul class="flashes">
+                        {% for m in messages %}
+                            <li>{{ m }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+</body>
+</html>

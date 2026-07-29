@@ -1,0 +1,332 @@
+/* ---------- Tokens ---------- */
+:root {
+    --bg: #F5F6F8;
+    --surface: #FFFFFF;
+    --border: #E3E6EB;
+    --text: #1B1F27;
+    --text-muted: #6B7280;
+    --accent: #0F6E5C;
+    --accent-hover: #0B5647;
+    --accent-soft: #E6F2EF;
+    --positive: #0F6E5C;
+    --positive-soft: #E6F2EF;
+    --negative: #B3413B;
+    --negative-soft: #FBEDEC;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin: 0 0 1rem 0;
+}
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.05rem; color: var(--text); }
+
+/* ---------- App shell: sidebar + content ---------- */
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+    margin-bottom: 2rem;
+}
+.brand-mark {
+    color: var(--accent);
+    font-size: 1rem;
+}
+.brand-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.sidebar nav a {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 550;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+}
+.sidebar nav a:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+.sidebar nav a.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-left-color: var(--accent);
+}
+.sidebar nav a.disabled {
+    color: #C6CAD2;
+    cursor: default;
+    pointer-events: none;
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+}
+main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+}
+
+/* ---------- Sections as cards ---------- */
+section {
+    margin-bottom: 2rem;
+}
+section > table,
+section > details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+section > table {
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+}
+
+/* ---------- Stat cards ---------- */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.85rem;
+}
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 550;
+}
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+.stat-card.positive .stat-value { color: var(--positive); }
+.stat-card.negative .stat-value { color: var(--negative); }
+
+/* ---------- Tables ---------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    text-align: left;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background: #FAFBFC;
+    border-bottom: 1px solid var(--border);
+}
+td {
+    border-bottom: 1px solid var(--border);
+}
+tr:last-child td {
+    border-bottom: none;
+}
+tr.over-budget td:first-child {
+    box-shadow: inset 3px 0 0 var(--negative);
+}
+tr.over-budget {
+    background: var(--negative-soft);
+}
+
+/* ---------- Details/summary as an accordion card ---------- */
+details {
+    margin-top: 1rem;
+    padding: 0;
+}
+details summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.85rem 1.1rem;
+    color: var(--accent);
+    list-style: none;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::before {
+    content: "+ ";
+}
+details[open] summary::before {
+    content: "\2212 ";
+}
+details .stacked-form {
+    border-top: 1px solid var(--border);
+    box-shadow: none;
+}
+
+/* ---------- Forms ---------- */
+.stacked-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    align-items: flex-end;
+    padding: 1.1rem;
+}
+.stacked-form label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.78rem;
+    font-weight: 550;
+    color: var(--text-muted);
+    gap: 0.3rem;
+}
+.stacked-form input,
+.stacked-form select {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    min-width: 140px;
+}
+.stacked-form input:focus,
+.stacked-form select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.stacked-form button {
+    height: 2.35rem;
+    padding: 0 1rem;
+    border: none;
+    border-radius: 7px;
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.stacked-form button:hover {
+    background: var(--accent-hover);
+}
+
+table button {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--negative);
+    border-radius: 6px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+table button:hover {
+    background: var(--negative-soft);
+    border-color: var(--negative);
+}
+
+/* ---------- Month picker ---------- */
+.month-picker {
+    margin-bottom: 1.5rem;
+}
+.month-picker label {
+    font-size: 0.85rem;
+    font-weight: 550;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.month-picker input {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-family: inherit;
+}
+
+/* ---------- Flash messages ---------- */
+.flashes {
+    background: var(--positive-soft);
+    border: 1px solid #BFE0D8;
+    color: var(--accent-hover);
+    padding: 0.7rem 1rem;
+    border-radius: var(--radius);
+    list-style: none;
+    margin: 0 0 1.5rem 0;
+    font-size: 0.88rem;
+    font-weight: 550;
+}
+
+code {
+    background: #F0F0F0;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+/* ---------- Small screens: collapse sidebar to a top bar ---------- */
+@media (max-width: 720px) {
+    .app-shell { flex-direction: column; }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1rem;
+    }
+    .sidebar nav { flex-direction: row; flex-wrap: wrap; }
+    main { padding: 1.5rem 1.25rem 3rem; }
+    .stacked-form { flex-direction: column; align-items: stretch; }
+    .stacked-form input, .stacked-form select { min-width: 0; }
+}

@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard - Finance Dashboard{% endblock %}
+{% block content %}
+    <h1>Dashboard</h1>
+    <p>Net worth summary and charts land here in a later step.</p>
+    <p>For now: <a href="{{ url_for('income_page') }}">Income</a> and
+       <a href="{{ url_for('expenses_page') }}">Expenses</a> pages are live.</p>
+    <details>
+        <summary>Raw API (all tables)</summary>
+        <ul>
+        {% for t in tables %}
+            <li><code>{{ t }}</code></li>
+        {% endfor %}
+        </ul>
+    </details>
+{% endblock %}

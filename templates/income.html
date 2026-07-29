@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+{% block title %}Income - Finance Dashboard{% endblock %}
+{% block content %}
+<h1>Income</h1>
+
+<form method="get" action="{{ url_for('income_page') }}" class="month-picker">
+    <label>Viewing month:
+        <input type="month" name="month" value="{{ month }}" onchange="this.form.submit()">
+    </label>
+</form>
+
+<section>
+    <h2>Summary for {{ month }}</h2>
+    <div class="stat-grid">
+        <div class="stat-card">
+            <span class="stat-label">Expected net income</span>
+            <span class="stat-value">${{ "%.2f"|format(expected_net_total) }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Actual net income logged</span>
+            <span class="stat-value">${{ "%.2f"|format(actual_net_total) }}</span>
+        </div>
+        <div class="stat-card {{ 'positive' if (actual_net_total - expected_net_total) >= 0 else 'negative' }}">
+            <span class="stat-label">Difference</span>
+            <span class="stat-value">${{ "%.2f"|format(actual_net_total - expected_net_total) }}</span>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>Income Sources</h2>
+    <table>
+        <tr>
+            <th>Owner</th><th>Name</th><th>Frequency</th>
+            <th>Expected Gross/mo</th><th>Tax Rate</th><th>Start Date</th><th></th>
+        </tr>
+        {% for s in sources %}
+        <tr>
+            <td>{{ s.owner }}</td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.pay_frequency }}</td>
+            <td>${{ "%.2f"|format(s.expected_gross_monthly) }}</td>
+            <td>{{ (s.effective_tax_rate * 100)|round(1) }}%</td>
+            <td>{{ s.start_date or "-" }}</td>
+            <td>
+                <form method="post" action="{{ url_for('income_source_delete', row_id=s.id) }}"
+                      onsubmit="return confirm('Delete this source? Its logged actuals are removed too.');">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7">No income sources yet - add one below.</td></tr>
+        {% endfor %}
+    </table>
+
+    <details open>
+        <summary>Add Income Source</summary>
+        <form method="post" action="{{ url_for('income_source_create') }}" class="stacked-form">
+            <label>Owner
+                <input type="text" name="owner" required placeholder="Caleb">
+            </label>
+            <label>Name
+                <input type="text" name="name" required placeholder="Primary Job">
+            </label>
+            <label>Pay Frequency
+                <select name="pay_frequency">
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Biweekly</option>
+                    <option value="semimonthly">Semimonthly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+            </label>
+            <label>Expected Gross Monthly ($)
+                <input type="number" step="0.01" name="expected_gross_monthly" required>
+            </label>
+            <label>Effective Tax Rate (e.g. 0.22 for 22%)
+                <input type="number" step="0.001" name="effective_tax_rate" required>
+            </label>
+            <label>Start Date
+                <input type="date" name="start_date">
+            </label>
+            <button type="submit">Add Source</button>
+        </form>
+    </details>
+</section>
+
+<section>
+    <h2>Actual Income Logged - {{ month }}</h2>
+    <table>
+        <tr><th>Source</th><th>Gross Actual</th><th>Net Actual</th><th></th></tr>
+        {% for a in actuals %}
+        <tr>
+            <td>
+                {% for s in sources %}{% if s.id == a.income_source_id %}{{ s.name }} ({{ s.owner }}){% endif %}{% endfor %}
+            </td>
+            <td>{{ "$%.2f"|format(a.gross_actual) if a.gross_actual is not none else "-" }}</td>
+            <td>{{ "$%.2f"|format(a.net_actual) if a.net_actual is not none else "-" }}</td>
+            <td>
+                <form method="post" action="{{ url_for('income_actual_delete', row_id=a.id) }}">
+                    <input type="hidden" name="month" value="{{ month }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">Nothing logged for {{ month }} yet.</td></tr>
+        {% endfor %}
+    </table>
+
+    <details open>
+        <summary>Log Actual Income</summary>
+        <form method="post" action="{{ url_for('income_actual_create') }}" class="stacked-form">
+            <label>Source
+                <select name="income_source_id" required>
+                    {% for s in sources %}
+                    <option value="{{ s.id }}">{{ s.name }} ({{ s.owner }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Month
+                <input type="month" name="month" value="{{ month }}" required>
+            </label>
+            <label>Gross Actual ($)
+                <input type="number" step="0.01" name="gross_actual">
+            </label>
+            <label>Net Actual ($)
+                <input type="number" step="0.01" name="net_actual">
+            </label>
+            <button type="submit">Log Income</button>
+        </form>
+    </details>
+</section>
+{% endblock %}
