@@ -29,15 +29,20 @@
 
 <section>
     <h2>Budget vs Actual by Category - {{ month }}</h2>
+    <div class="table-scroll-x">
     <table>
-        <tr><th>Category</th><th>Budget</th><th>Actual</th><th>Remaining</th><th></th></tr>
+        <tr><th>Category</th><th>Budget Amount</th><th>Frequency</th><th>Monthly Equiv.</th><th>Actual (this mo.)</th><th>Remaining</th><th>Due Day</th><th></th></tr>
         {% for c in categories %}
         {% set spent = actual_by_category.get(c.id, 0) %}
-        <tr class="{{ 'over-budget' if spent > c.monthly_budget else '' }}">
+        {% set monthly_equiv = monthly_equiv_by_category.get(c.id, c.monthly_budget) %}
+        <tr class="{{ 'over-budget' if spent > monthly_equiv else '' }}">
             <td>{{ c.name }}</td>
             <td>${{ "%.2f"|format(c.monthly_budget) }}</td>
+            <td>{{ frequency_labels.get(c.frequency, c.frequency) if frequency_labels else c.frequency }}</td>
+            <td>${{ "%.2f"|format(monthly_equiv) }}</td>
             <td>${{ "%.2f"|format(spent) }}</td>
-            <td>${{ "%.2f"|format(c.monthly_budget - spent) }}</td>
+            <td>${{ "%.2f"|format(monthly_equiv - spent) }}</td>
+            <td>{{ c.due_day or "-" }}</td>
             <td>
                 <form method="post" action="{{ url_for('expense_category_delete', row_id=c.id) }}"
                       onsubmit="return confirm('Delete this category? Its logged actuals are removed too.');">
@@ -46,18 +51,31 @@
             </td>
         </tr>
         {% else %}
-        <tr><td colspan="5">No expense categories yet - add one below.</td></tr>
+        <tr><td colspan="8">No expense categories yet - add one below.</td></tr>
         {% endfor %}
     </table>
+    </div>
 
     <details open>
         <summary>Add Expense Category</summary>
         <form method="post" action="{{ url_for('expense_category_create') }}" class="stacked-form">
             <label>Category Name
-                <input type="text" name="name" required placeholder="Groceries">
+                <input type="text" name="name" required placeholder="Groceries, Car Insurance">
             </label>
-            <label>Monthly Budget ($)
+            <label>Budget Amount ($)
                 <input type="number" step="0.01" name="monthly_budget" required>
+            </label>
+            <label>Frequency
+                <select name="frequency">
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Biweekly</option>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="semiannually">Semiannually</option>
+                    <option value="annually">Annually</option>
+                </select>
+            </label>
+            <label>Due Day (1-31, optional - for bills)
+                <input type="number" min="1" max="31" name="due_day">
             </label>
             <button type="submit">Add Category</button>
         </form>

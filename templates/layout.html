@@ -23,8 +23,12 @@
                 <a href="{{ url_for('expenses_page') }}" class="{{ 'active' if request.path == url_for('expenses_page') else '' }}">
                     Expenses
                 </a>
-                <a href="#" class="disabled">Debts</a>
-                <a href="#" class="disabled">Investments</a>
+                <a href="{{ url_for('debts_page') }}" class="{{ 'active' if request.path == url_for('debts_page') else '' }}">
+                    Debts
+                </a>
+                <a href="{{ url_for('investments_page') }}" class="{{ 'active' if request.path == url_for('investments_page') else '' }}">
+                    Investments
+                </a>
             </nav>
         </aside>
         <div class="content">

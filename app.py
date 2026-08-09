@@ -3,6 +3,8 @@ from flask import Flask, jsonify, request, render_template, redirect, url_for, f
 import database
 import generic_crud as crud
 import helpers
+import debt_engine
+import investment_engine
 
 
 def create_app():
@@ -17,11 +19,39 @@ def create_app():
     with app.app_context():
         database.init_db(app)
 
-    # ---------- Dashboard (placeholder for now, built out in a later step) ----------
+    # ---------- Dashboard ----------
 
     @app.route("/")
     def index():
-        return render_template("base.html", tables=sorted(crud.ALLOWED_TABLES))
+        income_sources = crud.list_rows("income_sources")
+        debts = crud.list_rows("debts")
+        accounts = crud.list_rows("investment_accounts")
+        categories = crud.list_rows("expense_categories")
+
+        total_income_monthly = sum(
+            s["expected_gross_monthly"] * (1 - s["effective_tax_rate"]) for s in income_sources
+        )
+        total_debt = sum(d["current_balance"] for d in debts)
+        total_min_debt_payments = sum(d["min_payment"] for d in debts)
+        total_investments = sum(a["current_balance"] for a in accounts)
+        total_expenses_monthly = sum(
+            helpers.monthly_equivalent(c["monthly_budget"], c.get("frequency") or "monthly")
+            for c in categories
+        )
+        net_worth = total_investments - total_debt
+        leftover = total_income_monthly - total_expenses_monthly - total_min_debt_payments
+
+        return render_template(
+            "base.html",
+            net_worth=net_worth,
+            total_debt=total_debt,
+            total_investments=total_investments,
+            total_income_monthly=total_income_monthly,
+            total_expenses_monthly=total_expenses_monthly,
+            leftover=leftover,
+            debts=debts,
+            accounts=accounts,
+        )
 
     # ---------- Income page ----------
 
@@ -47,16 +77,35 @@ def create_app():
 
     @app.route("/income/sources", methods=["POST"])
     def income_source_create():
+        pay_type = request.form.get("pay_type", "salary").strip() or "salary"
+        hourly_rate = request.form.get("hourly_rate", type=float)
+        hours_per_week = request.form.get("hours_per_week", type=float)
+        salary_input = request.form.get("expected_gross_monthly", type=float)
+
+        if pay_type == "hourly":
+            if hourly_rate is None or hours_per_week is None:
+                flash("Please provide an hourly rate and hours per week.")
+                return redirect(url_for("income_page"))
+            expected_gross_monthly = helpers.hourly_to_expected_gross_monthly(hourly_rate, hours_per_week)
+        else:
+            if salary_input is None:
+                flash("Please provide an expected gross monthly amount.")
+                return redirect(url_for("income_page"))
+            expected_gross_monthly = salary_input
+
         data = {
             "owner": request.form.get("owner", "").strip(),
             "name": request.form.get("name", "").strip(),
             "pay_frequency": request.form.get("pay_frequency", "").strip(),
-            "expected_gross_monthly": request.form.get("expected_gross_monthly", type=float),
+            "pay_type": pay_type,
+            "hourly_rate": hourly_rate,
+            "hours_per_week": hours_per_week,
+            "expected_gross_monthly": expected_gross_monthly,
             "effective_tax_rate": request.form.get("effective_tax_rate", type=float),
             "start_date": request.form.get("start_date") or None,
         }
-        if not data["owner"] or not data["name"] or data["expected_gross_monthly"] is None or data["effective_tax_rate"] is None:
-            flash("Please fill in owner, name, expected gross monthly, and tax rate.")
+        if not data["owner"] or not data["name"] or data["effective_tax_rate"] is None:
+            flash("Please fill in owner, name, and tax rate.")
             return redirect(url_for("income_page"))
         crud.create_row("income_sources", data)
         flash(f"Added income source '{data['name']}'.")
@@ -103,7 +152,11 @@ def create_app():
         for a in actuals:
             actual_by_category[a["category_id"]] = actual_by_category.get(a["category_id"], 0) + a["amount_actual"]
 
-        budget_total = sum(c["monthly_budget"] for c in categories)
+        monthly_equiv_by_category = {
+            c["id"]: helpers.monthly_equivalent(c["monthly_budget"], c.get("frequency") or "monthly")
+            for c in categories
+        }
+        budget_total = sum(monthly_equiv_by_category.values())
         actual_total = sum(a["amount_actual"] for a in actuals)
 
         return render_template(
@@ -111,9 +164,11 @@ def create_app():
             categories=categories,
             actuals=actuals,
             actual_by_category=actual_by_category,
+            monthly_equiv_by_category=monthly_equiv_by_category,
             month=month,
             budget_total=budget_total,
             actual_total=actual_total,
+            frequency_labels=helpers.FREQUENCY_LABELS,
         )
 
     @app.route("/expenses/categories", methods=["POST"])
@@ -121,9 +176,11 @@ def create_app():
         data = {
             "name": request.form.get("name", "").strip(),
             "monthly_budget": request.form.get("monthly_budget", type=float),
+            "frequency": request.form.get("frequency", "monthly").strip() or "monthly",
+            "due_day": request.form.get("due_day", type=int),
         }
         if not data["name"] or data["monthly_budget"] is None:
-            flash("Please provide a category name and monthly budget.")
+            flash("Please provide a category name and budget amount.")
             return redirect(url_for("expenses_page"))
         crud.create_row("expense_categories", data)
         flash(f"Added category '{data['name']}'.")
@@ -156,6 +213,131 @@ def create_app():
         crud.delete_row("expense_actuals", row_id)
         flash("Entry deleted.")
         return redirect(url_for("expenses_page", month=month))
+
+    # ---------- Debts page ----------
+
+    @app.route("/debts", methods=["GET"])
+    def debts_page():
+        debts = crud.list_rows("debts")
+        total_balance = sum(d["current_balance"] for d in debts)
+        total_min_payment = sum(d["min_payment"] for d in debts)
+        weighted_apr = (
+            sum(d["current_balance"] * d["apr"] for d in debts) / total_balance
+            if total_balance else 0.0
+        )
+
+        strategy = request.args.get("strategy", "avalanche")
+        extra_monthly = request.args.get("extra", type=float) or 0.0
+        result = debt_engine.simulate_payoff(debts, extra_monthly, strategy)
+
+        edit_id = request.args.get("edit", type=int)
+        edit_debt = crud.get_row("debts", edit_id) if edit_id else None
+
+        return render_template(
+            "debts.html",
+            debts=debts,
+            total_balance=total_balance,
+            total_min_payment=total_min_payment,
+            weighted_apr=weighted_apr,
+            strategy=strategy,
+            extra_monthly=extra_monthly,
+            result=result,
+            edit_debt=edit_debt,
+        )
+
+    @app.route("/debts", methods=["POST"])
+    def debt_create():
+        data = {
+            "name": request.form.get("name", "").strip(),
+            "owner": request.form.get("owner", "").strip() or None,
+            "current_balance": request.form.get("current_balance", type=float),
+            "apr": request.form.get("apr", type=float),
+            "min_payment": request.form.get("min_payment", type=float),
+            "due_day": request.form.get("due_day", type=int),
+        }
+        if not data["name"] or data["current_balance"] is None or data["apr"] is None or data["min_payment"] is None:
+            flash("Please fill in name, balance, APR, and minimum payment.")
+            return redirect(url_for("debts_page"))
+        crud.create_row("debts", data)
+        flash(f"Added debt '{data['name']}'.")
+        return redirect(url_for("debts_page"))
+
+    @app.route("/debts/<int:row_id>/edit", methods=["POST"])
+    def debt_edit(row_id):
+        data = {
+            "name": request.form.get("name", "").strip(),
+            "owner": request.form.get("owner", "").strip() or None,
+            "current_balance": request.form.get("current_balance", type=float),
+            "apr": request.form.get("apr", type=float),
+            "min_payment": request.form.get("min_payment", type=float),
+            "due_day": request.form.get("due_day", type=int),
+        }
+        if not data["name"] or data["current_balance"] is None or data["apr"] is None or data["min_payment"] is None:
+            flash("Please fill in name, balance, APR, and minimum payment.")
+            return redirect(url_for("debts_page", edit=row_id))
+        crud.update_row("debts", row_id, data)
+        flash(f"Updated debt '{data['name']}'.")
+        return redirect(url_for("debts_page"))
+
+    @app.route("/debts/<int:row_id>/delete", methods=["POST"])
+    def debt_delete(row_id):
+        crud.delete_row("debts", row_id)
+        flash("Debt deleted.")
+        return redirect(url_for("debts_page"))
+
+    # ---------- Investments page ----------
+
+    @app.route("/investments", methods=["GET"])
+    def investments_page():
+        accounts = crud.list_rows("investment_accounts")
+        income_sources = crud.list_rows("income_sources")
+        income_sources_by_id = {s["id"]: s for s in income_sources}
+
+        horizon_years = request.args.get("years", type=int) or 10
+        projection = investment_engine.project_growth(
+            accounts, income_sources_by_id, months=horizon_years * 12
+        )
+
+        return render_template(
+            "investments.html",
+            accounts=accounts,
+            income_sources=income_sources,
+            horizon_years=horizon_years,
+            projection=projection,
+        )
+
+    @app.route("/investments", methods=["POST"])
+    def investment_create():
+        data = {
+            "owner": request.form.get("owner", "").strip(),
+            "name": request.form.get("name", "").strip(),
+            "account_type": request.form.get("account_type", "").strip(),
+            "current_balance": request.form.get("current_balance", type=float),
+            "contribution_percent": request.form.get("contribution_percent", type=float),
+            "employer_match_percent": request.form.get("employer_match_percent", type=float),
+            "expected_annual_return": request.form.get("expected_annual_return", type=float),
+            "linked_income_source_id": request.form.get("linked_income_source_id", type=int) or None,
+        }
+        if not data["owner"] or not data["name"] or data["current_balance"] is None:
+            flash("Please fill in owner, name, and current balance.")
+            return redirect(url_for("investments_page"))
+        crud.create_row("investment_accounts", data)
+        flash(f"Added investment account '{data['name']}'.")
+        return redirect(url_for("investments_page"))
+
+    @app.route("/investments/<int:row_id>/delete", methods=["POST"])
+    def investment_delete(row_id):
+        crud.delete_row("investment_accounts", row_id)
+        flash("Investment account deleted.")
+        return redirect(url_for("investments_page"))
+
+    @app.route("/investments/<int:row_id>/balance", methods=["POST"])
+    def investment_update_balance(row_id):
+        new_balance = request.form.get("current_balance", type=float)
+        if new_balance is not None:
+            crud.update_row("investment_accounts", row_id, {"current_balance": new_balance})
+            flash("Balance updated.")
+        return redirect(url_for("investments_page"))
 
     # ---------- Generic REST API: /api/<table> and /api/<table>/<id> ----------
 

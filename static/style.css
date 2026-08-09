@@ -16,6 +16,10 @@
     --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
 }
 
+html {
+    font-size: 112.5%; /* 18px base instead of 16px -- everything below is rem-based, so this scales the whole app */
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -31,8 +35,9 @@ h1, h2, h3 {
     letter-spacing: -0.01em;
     margin: 0 0 1rem 0;
 }
-h1 { font-size: 1.5rem; }
-h2 { font-size: 1.05rem; color: var(--text); }
+h1 { font-size: 1.65rem; }
+h2 { font-size: 1.15rem; color: var(--text); }
+h3 { font-size: 1.05rem; }
 
 /* ---------- App shell: sidebar + content ---------- */
 .app-shell {
@@ -102,7 +107,7 @@ h2 { font-size: 1.05rem; color: var(--text); }
     min-width: 0;
 }
 main {
-    max-width: 920px;
+    max-width: 1040px;
     margin: 0 auto;
     padding: 2.5rem 2rem 4rem;
 }
@@ -162,7 +167,7 @@ table {
 th, td {
     text-align: left;
     padding: 0.65rem 1rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-variant-numeric: tabular-nums;
 }
 th {
@@ -274,6 +279,22 @@ table button:hover {
     background: var(--negative-soft);
     border-color: var(--negative);
 }
+.link-button {
+    display: inline-block;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-right: 0.4rem;
+}
+.link-button:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
 
 /* ---------- Month picker ---------- */
 .month-picker {
@@ -307,11 +328,118 @@ table button:hover {
     font-weight: 550;
 }
 
+/* ---------- Dashboard tiles (bigger, bolder than stat-cards) ---------- */
+.tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1.1rem;
+    margin-bottom: 2rem;
+}
+.tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.tile-label {
+    font-size: 0.82rem;
+    font-weight: 650;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.tile-value {
+    font-size: 2.15rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+.tile-sub {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+.tile.accent-teal { border-top-color: var(--accent); }
+.tile.accent-teal .tile-value { color: var(--accent); }
+.tile.accent-red { border-top-color: var(--negative); }
+.tile.accent-red .tile-value { color: var(--negative); }
+
+.dashboard-note {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+}
+.dashboard-note a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+.dashboard-note a:hover {
+    text-decoration: underline;
+}
+
 code {
     background: #F0F0F0;
     padding: 0.1rem 0.35rem;
     border-radius: 4px;
     font-size: 0.85em;
+}
+
+/* ---------- Scrollable tables (long payoff/growth schedules, wide accounts table) ---------- */
+.table-scroll {
+    max-height: 380px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+.table-scroll table {
+    margin-bottom: 0;
+}
+.table-scroll-x {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+}
+.table-scroll-x table {
+    margin-bottom: 0;
+    min-width: 700px;
+}
+
+/* ---------- Inline forms (e.g. quick balance update inside a table cell) ---------- */
+.inline-form {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+.inline-form input {
+    width: 110px;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+.inline-form button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--accent);
+    border-radius: 6px;
+    cursor: pointer;
+}
+.inline-form button:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
 }
 
 /* ---------- Small screens: collapse sidebar to a top bar ---------- */

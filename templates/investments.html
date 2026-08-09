@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+{% block title %}Investments - Finance Dashboard{% endblock %}
+{% block content %}
+<h1>Investments</h1>
+
+<section>
+    <h2>Summary</h2>
+    <div class="stat-grid">
+        <div class="stat-card">
+            <span class="stat-label">Total current balance</span>
+            <span class="stat-value">${{ "%.2f"|format(projection.total_current_balance) }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Total monthly contributions</span>
+            <span class="stat-value">${{ "%.2f"|format(projection.total_monthly_contribution) }}</span>
+        </div>
+        <div class="stat-card positive">
+            <span class="stat-label">Projected in {{ horizon_years }} years</span>
+            <span class="stat-value">${{ "%.2f"|format(projection.total_projected_balance) }}</span>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>Your Accounts</h2>
+    <div class="table-scroll-x">
+    <table>
+        <tr>
+            <th>Owner</th><th>Name</th><th>Type</th><th>Balance</th>
+            <th>Contribution %</th><th>Employer Match %</th><th>Est. Return</th>
+            <th>Linked Income</th><th></th>
+        </tr>
+        {% for a in accounts %}
+        <tr>
+            <td>{{ a.owner }}</td>
+            <td>{{ a.name }}</td>
+            <td>{{ a.account_type }}</td>
+            <td>
+                <form method="post" action="{{ url_for('investment_update_balance', row_id=a.id) }}" class="inline-form">
+                    <input type="number" step="0.01" name="current_balance" value="{{ a.current_balance }}">
+                    <button type="submit">Update</button>
+                </form>
+            </td>
+            <td>{{ ((a.contribution_percent or 0) * 100)|round(1) }}%</td>
+            <td>{{ ((a.employer_match_percent or 0) * 100)|round(1) }}%</td>
+            <td>{{ ((a.expected_annual_return or 0) * 100)|round(1) }}%</td>
+            <td>
+                {% for s in income_sources %}{% if s.id == a.linked_income_source_id %}{{ s.name }}{% endif %}{% endfor %}
+            </td>
+            <td>
+                <form method="post" action="{{ url_for('investment_delete', row_id=a.id) }}"
+                      onsubmit="return confirm('Delete this account?');">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9">No investment accounts yet - add one below.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+
+    <details open>
+        <summary>Add Investment Account</summary>
+        <form method="post" action="{{ url_for('investment_create') }}" class="stacked-form">
+            <label>Owner
+                <input type="text" name="owner" required placeholder="Caleb">
+            </label>
+            <label>Name
+                <input type="text" name="name" required placeholder="401k - Fidelity">
+            </label>
+            <label>Type
+                <select name="account_type">
+                    <option value="401k">401k</option>
+                    <option value="403b">403b</option>
+                    <option value="roth_ira">Roth IRA</option>
+                    <option value="traditional_ira">Traditional IRA</option>
+                    <option value="brokerage">Brokerage</option>
+                    <option value="hsa">HSA</option>
+                </select>
+            </label>
+            <label>Current Balance ($)
+                <input type="number" step="0.01" name="current_balance" required>
+            </label>
+            <label>Contribution % (e.g. 0.06 for 6%)
+                <input type="number" step="0.001" name="contribution_percent">
+            </label>
+            <label>Employer Match %
+                <input type="number" step="0.001" name="employer_match_percent">
+            </label>
+            <label>Expected Annual Return (e.g. 0.07 for 7%)
+                <input type="number" step="0.001" name="expected_annual_return">
+            </label>
+            <label>Linked Income Source
+                <select name="linked_income_source_id">
+                    <option value="">None</option>
+                    {% for s in income_sources %}
+                    <option value="{{ s.id }}">{{ s.name }} ({{ s.owner }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button type="submit">Add Account</button>
+        </form>
+    </details>
+</section>
+
+<section>
+    <h2>Growth Projection</h2>
+    <form method="get" action="{{ url_for('investments_page') }}" class="stacked-form">
+        <label>Horizon (years)
+            <select name="years">
+                <option value="5" {{ "selected" if horizon_years == 5 else "" }}>5</option>
+                <option value="10" {{ "selected" if horizon_years == 10 else "" }}>10</option>
+                <option value="20" {{ "selected" if horizon_years == 20 else "" }}>20</option>
+                <option value="30" {{ "selected" if horizon_years == 30 else "" }}>30</option>
+            </select>
+        </label>
+        <button type="submit">Recalculate</button>
+    </form>
+
+    {% if accounts %}
+    <div class="table-scroll" style="margin-top: 1.25rem;">
+        <table>
+            <tr><th>Year</th><th>Projected Combined Balance</th></tr>
+            {% for row in projection.schedule %}
+            <tr><td>{{ row.years }}</td><td>${{ "%.2f"|format(row.total_balance) }}</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

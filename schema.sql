@@ -8,7 +8,10 @@ CREATE TABLE IF NOT EXISTS income_sources (
     owner TEXT NOT NULL,                     -- e.g. 'Caleb' or 'Wife'
     name TEXT NOT NULL,                      -- e.g. 'Primary Job'
     pay_frequency TEXT NOT NULL,             -- 'weekly' | 'biweekly' | 'monthly' | 'semimonthly'
-    expected_gross_monthly REAL NOT NULL,
+    pay_type TEXT NOT NULL DEFAULT 'salary', -- 'salary' | 'hourly'
+    hourly_rate REAL,                        -- only set when pay_type = 'hourly'
+    hours_per_week REAL,                     -- only set when pay_type = 'hourly'
+    expected_gross_monthly REAL NOT NULL,    -- for salary: entered directly. for hourly: rate * hours/week * 52/12
     effective_tax_rate REAL NOT NULL,        -- e.g. 0.22 for 22%
     start_date TEXT
 );
@@ -25,7 +28,9 @@ CREATE TABLE IF NOT EXISTS income_actuals (
 CREATE TABLE IF NOT EXISTS expense_categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    monthly_budget REAL NOT NULL
+    monthly_budget REAL NOT NULL,            -- the amount entered, at whatever `frequency` below is
+    frequency TEXT NOT NULL DEFAULT 'monthly', -- 'weekly' | 'biweekly' | 'monthly' | 'semiannually' | 'annually'
+    due_day INTEGER                          -- day of month this bill is due (1-31), optional
 );
 
 CREATE TABLE IF NOT EXISTS expense_actuals (
@@ -42,7 +47,8 @@ CREATE TABLE IF NOT EXISTS debts (
     current_balance REAL NOT NULL,
     apr REAL NOT NULL,                       -- e.g. 0.0649 for 6.49%
     min_payment REAL NOT NULL,
-    owner TEXT
+    owner TEXT,
+    due_day INTEGER                          -- day of month the minimum payment is due (1-31)
 );
 
 CREATE TABLE IF NOT EXISTS debt_payment_log (

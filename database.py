@@ -29,6 +29,35 @@ def init_db(app):
             conn.executescript(f.read())
     print(f"Database initialized at {db_path}")
 
+    run_migrations(app)
+
+
+# Simple column-add migrations. CREATE TABLE IF NOT EXISTS (above) only
+# helps for brand new databases -- an existing finance.db needs its
+# tables altered in place. Each entry here is checked against the real
+# schema and only applied if the column is missing, so this is safe to
+# run every time the app starts, and safe to re-run after copying in a
+# newer app.py without touching your data.
+MIGRATIONS = [
+    ("debts", "due_day", "INTEGER"),
+    ("expense_categories", "due_day", "INTEGER"),
+    ("income_sources", "pay_type", "TEXT NOT NULL DEFAULT 'salary'"),
+    ("income_sources", "hourly_rate", "REAL"),
+    ("income_sources", "hours_per_week", "REAL"),
+    ("expense_categories", "frequency", "TEXT NOT NULL DEFAULT 'monthly'"),
+]
+
+
+def run_migrations(app):
+    db_path = app.config["DATABASE_PATH"]
+    with sqlite3.connect(db_path) as conn:
+        for table, column, coltype in MIGRATIONS:
+            existing_cols = [row[1] for row in conn.execute(f"PRAGMA table_info({table})")]
+            if column not in existing_cols:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {coltype}")
+                print(f"Migrated: added {table}.{column}")
+        conn.commit()
+
 def register_app(app):
     """Wire up teardown so connections close after each request."""
     app.teardown_appcontext(close_db)

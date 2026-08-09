@@ -31,13 +31,20 @@
     <h2>Income Sources</h2>
     <table>
         <tr>
-            <th>Owner</th><th>Name</th><th>Frequency</th>
+            <th>Owner</th><th>Name</th><th>Type</th><th>Frequency</th>
             <th>Expected Gross/mo</th><th>Tax Rate</th><th>Start Date</th><th></th>
         </tr>
         {% for s in sources %}
         <tr>
             <td>{{ s.owner }}</td>
             <td>{{ s.name }}</td>
+            <td>
+                {% if s.pay_type == 'hourly' %}
+                    Hourly (${{ "%.2f"|format(s.hourly_rate) }}/hr &times; {{ s.hours_per_week|round(1) }}h/wk)
+                {% else %}
+                    Salary
+                {% endif %}
+            </td>
             <td>{{ s.pay_frequency }}</td>
             <td>${{ "%.2f"|format(s.expected_gross_monthly) }}</td>
             <td>{{ (s.effective_tax_rate * 100)|round(1) }}%</td>
@@ -50,13 +57,13 @@
             </td>
         </tr>
         {% else %}
-        <tr><td colspan="7">No income sources yet - add one below.</td></tr>
+        <tr><td colspan="8">No income sources yet - add one below.</td></tr>
         {% endfor %}
     </table>
 
     <details open>
         <summary>Add Income Source</summary>
-        <form method="post" action="{{ url_for('income_source_create') }}" class="stacked-form">
+        <form method="post" action="{{ url_for('income_source_create') }}" class="stacked-form" id="income-source-form">
             <label>Owner
                 <input type="text" name="owner" required placeholder="Caleb">
             </label>
@@ -71,9 +78,25 @@
                     <option value="monthly">Monthly</option>
                 </select>
             </label>
-            <label>Expected Gross Monthly ($)
-                <input type="number" step="0.01" name="expected_gross_monthly" required>
+            <label>Pay Type
+                <select name="pay_type" onchange="toggleIncomePayType(this)">
+                    <option value="salary">Salary</option>
+                    <option value="hourly">Hourly</option>
+                </select>
             </label>
+            <span class="salary-fields" style="display: contents;">
+                <label>Expected Gross Monthly ($)
+                    <input type="number" step="0.01" name="expected_gross_monthly">
+                </label>
+            </span>
+            <span class="hourly-fields" style="display: none;">
+                <label>Hourly Rate ($)
+                    <input type="number" step="0.01" name="hourly_rate">
+                </label>
+                <label>Hours per Week
+                    <input type="number" step="0.5" name="hours_per_week">
+                </label>
+            </span>
             <label>Effective Tax Rate (e.g. 0.22 for 22%)
                 <input type="number" step="0.001" name="effective_tax_rate" required>
             </label>
@@ -83,6 +106,21 @@
             <button type="submit">Add Source</button>
         </form>
     </details>
+
+    <script>
+        function toggleIncomePayType(select) {
+            const form = select.closest("form");
+            const salaryFields = form.querySelector(".salary-fields");
+            const hourlyFields = form.querySelector(".hourly-fields");
+            if (select.value === "hourly") {
+                salaryFields.style.display = "none";
+                hourlyFields.style.display = "contents";
+            } else {
+                salaryFields.style.display = "contents";
+                hourlyFields.style.display = "none";
+            }
+        }
+    </script>
 </section>
 
 <section>
