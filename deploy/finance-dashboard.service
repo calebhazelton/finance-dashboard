@@ -1,0 +1,13 @@
+[Unit]
+Description=Finance Dashboard (waitress)
+After=network.target
+
+[Service]
+User=pihome
+WorkingDirectory=/home/pihome/finance-dashboard
+Environment=PATH=/home/pihome/finance-dashboard/.venv/bin
+ExecStart=/home/pihome/finance-dashboard/.venv/bin/waitress-serve --host=127.0.0.1 --port=5000 wsgi:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

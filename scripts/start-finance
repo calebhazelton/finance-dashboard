@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+if systemctl is-active --quiet finance-dashboard; then
+    echo "Finance dashboard is already running."
+else
+    echo "Starting finance dashboard..."
+    sudo systemctl start finance-dashboard
+    sleep 1
+fi
+
+if systemctl is-active --quiet finance-dashboard; then
+    echo "Finance dashboard is running. Visit http://pihome.local"
+else
+    echo "Failed to start. Check: sudo systemctl status finance-dashboard"
+    exit 1
+fi

@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+echo "Restarting finance dashboard..."
+sudo systemctl restart finance-dashboard
+sleep 1
+systemctl is-active --quiet finance-dashboard && echo "Finance dashboard is running." || echo "Failed to restart. Check: sudo systemctl status finance-dashboard"

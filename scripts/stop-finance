@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+if systemctl is-active --quiet finance-dashboard; then
+    echo "Stopping finance dashboard..."
+    sudo systemctl stop finance-dashboard
+else
+    echo "Finance dashboard is already stopped."
+fi
+
+if ! systemctl is-active --quiet finance-dashboard; then
+    echo "Finance dashboard is stopped."
+else
+    echo "Failed to stop. Check: sudo systemctl status finance-dashboard"
+    exit 1
+fi

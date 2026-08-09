@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+cd /home/pihome/finance-dashboard
+
+echo "Stopping finance dashboard..."
+stop-finance
+
+echo "Pulling latest changes from origin/main..."
+git pull origin main
+
+echo "Syncing Python dependencies..."
+source .venv/bin/activate
+pip install -r requirements.txt --quiet
+deactivate
+
+echo "Starting finance dashboard..."
+start-finance
