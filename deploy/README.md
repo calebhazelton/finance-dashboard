@@ -2,8 +2,7 @@
 
 This app runs on a Raspberry Pi via **waitress** (production WSGI server),
 managed by **systemd** (auto-start on boot, auto-restart on crash), fronted
-by **nginx** (so the site is reachable at `http://pihome.local` on port 80
-instead of `http://pihome.local:5000`).
+by **nginx**.
 
 ## Files
 
@@ -47,7 +46,7 @@ sudo chmod +x /usr/local/bin/start-finance /usr/local/bin/stop-finance /usr/loca
 
 ## Day-to-day update workflow
 
-On your laptop:
+On the workstation:
 ```bash
 # make changes, test locally with `python3 app.py`
 git add -A
@@ -55,7 +54,7 @@ git commit -m "Describe the change"
 git push origin main
 ```
 
-On the Pi (over SSH):
+On the server (over SSH):
 ```bash
 update-finance
 ```
