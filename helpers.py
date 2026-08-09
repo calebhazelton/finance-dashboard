@@ -5,6 +5,11 @@ def current_month():
     return date.today().strftime("%Y-%m")
 
 
+def current_date():
+    """Return today's date as 'YYYY-MM-DD'."""
+    return date.today().isoformat()
+
+
 # Multiplier to convert an amount at a given billing frequency into its
 # monthly equivalent, e.g. an annual $1200 bill is $100/month.
 FREQUENCY_TO_MONTHLY_FACTOR = {

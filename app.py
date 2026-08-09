@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Flask, jsonify, request, render_template, redirect, url_for, flash
 
 import database
@@ -169,6 +171,7 @@ def create_app():
             budget_total=budget_total,
             actual_total=actual_total,
             frequency_labels=helpers.FREQUENCY_LABELS,
+            current_date=helpers.current_date(),
         )
 
     @app.route("/expenses/categories", methods=["POST"])
@@ -195,17 +198,33 @@ def create_app():
     @app.route("/expenses/actuals", methods=["POST"])
     def expense_actual_create():
         month = request.form.get("month", "").strip()
+        expense_date = request.form.get("expense_date", "").strip()
+        notes = request.form.get("notes", "").strip() or None
+
+        if not expense_date:
+            flash("Please provide a full expense date.")
+            return redirect(url_for("expenses_page", month=month or helpers.current_month()))
+
+        try:
+            parsed_date = date.fromisoformat(expense_date)
+        except ValueError:
+            flash("Please provide a valid expense date.")
+            return redirect(url_for("expenses_page", month=month or helpers.current_month()))
+
+        derived_month = parsed_date.strftime("%Y-%m")
         data = {
             "category_id": request.form.get("category_id", type=int),
-            "month": month,
+            "month": derived_month,
+            "expense_date": expense_date,
             "amount_actual": request.form.get("amount_actual", type=float),
+            "notes": notes,
         }
-        if not data["category_id"] or not month or data["amount_actual"] is None:
-            flash("Please select a category, month, and amount.")
-            return redirect(url_for("expenses_page"))
+        if not data["category_id"] or data["amount_actual"] is None:
+            flash("Please select a category, date, and amount.")
+            return redirect(url_for("expenses_page", month=derived_month))
         crud.create_row("expense_actuals", data)
         flash("Logged expense.")
-        return redirect(url_for("expenses_page", month=month))
+        return redirect(url_for("expenses_page", month=derived_month))
 
     @app.route("/expenses/actuals/<int:row_id>/delete", methods=["POST"])
     def expense_actual_delete(row_id):

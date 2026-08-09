@@ -85,13 +85,15 @@
 <section>
     <h2>Expense Entries Logged - {{ month }}</h2>
     <table>
-        <tr><th>Category</th><th>Amount</th><th></th></tr>
+        <tr><th>Date</th><th>Category</th><th>Amount</th><th>Notes</th><th></th></tr>
         {% for a in actuals %}
         <tr>
+            <td>{{ a.expense_date or a.month }}</td>
             <td>
                 {% for c in categories %}{% if c.id == a.category_id %}{{ c.name }}{% endif %}{% endfor %}
             </td>
             <td>${{ "%.2f"|format(a.amount_actual) }}</td>
+            <td>{{ a.notes or "-" }}</td>
             <td>
                 <form method="post" action="{{ url_for('expense_actual_delete', row_id=a.id) }}">
                     <input type="hidden" name="month" value="{{ month }}">
@@ -100,7 +102,7 @@
             </td>
         </tr>
         {% else %}
-        <tr><td colspan="3">Nothing logged for {{ month }} yet.</td></tr>
+        <tr><td colspan="5">Nothing logged for {{ month }} yet.</td></tr>
         {% endfor %}
     </table>
 
@@ -114,11 +116,14 @@
                     {% endfor %}
                 </select>
             </label>
-            <label>Month
-                <input type="month" name="month" value="{{ month }}" required>
+            <label>Date
+                <input type="date" name="expense_date" value="{{ current_date }}" required>
             </label>
             <label>Amount ($)
                 <input type="number" step="0.01" name="amount_actual" required>
+            </label>
+            <label>Notes
+                <textarea name="notes" rows="3" placeholder="Groceries, gas, reimbursement, etc."></textarea>
             </label>
             <button type="submit">Log Expense</button>
         </form>

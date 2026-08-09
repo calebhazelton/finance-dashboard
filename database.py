@@ -45,6 +45,8 @@ MIGRATIONS = [
     ("income_sources", "hourly_rate", "REAL"),
     ("income_sources", "hours_per_week", "REAL"),
     ("expense_categories", "frequency", "TEXT NOT NULL DEFAULT 'monthly'"),
+    ("expense_actuals", "expense_date", "TEXT"),
+    ("expense_actuals", "notes", "TEXT"),
 ]
 
 

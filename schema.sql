@@ -37,7 +37,9 @@ CREATE TABLE IF NOT EXISTS expense_actuals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     category_id INTEGER NOT NULL,
     month TEXT NOT NULL,                     -- 'YYYY-MM'
+    expense_date TEXT,                       -- 'YYYY-MM-DD'
     amount_actual REAL NOT NULL,
+    notes TEXT,
     FOREIGN KEY (category_id) REFERENCES expense_categories(id) ON DELETE CASCADE
 );
 
