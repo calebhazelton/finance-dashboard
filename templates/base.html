@@ -48,7 +48,14 @@
     </div>
 
     <aside class="snapshot-panel">
-        <h2>Monthly Snapshot - {{ current_month }}</h2>
+        <div class="snapshot-month-picker">
+            <form method="get" action="{{ url_for('index') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+                <label for="snapshot_month" style="font-size: 0.85rem; font-weight: 550; color: var(--text-muted); white-space: nowrap;">Snapshot month:</label>
+                <input type="month" id="snapshot_month" name="snapshot_month" value="{{ snapshot_month }}" onchange="this.form.submit()" style="padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;">
+            </form>
+        </div>
+
+        <h2>Monthly Snapshot - {{ snapshot_month }}</h2>
         
         <section class="snapshot-section">
             <h3>Income Breakdown</h3>
@@ -65,7 +72,7 @@
                         <span class="snapshot-value">${{ "%.2f"|format(total_actual_income) }}</span>
                     </div>
                 {% else %}
-                    <p class="snapshot-empty">No income logged for {{ current_month }}</p>
+                    <p class="snapshot-empty">No income logged for {{ snapshot_month }}</p>
                 {% endif %}
             </div>
         </section>
@@ -85,7 +92,7 @@
                         <span class="snapshot-value">${{ "%.2f"|format(total_actual_expenses) }}</span>
                     </div>
                 {% else %}
-                    <p class="snapshot-empty">No expenses logged for {{ current_month }}</p>
+                    <p class="snapshot-empty">No expenses logged for {{ snapshot_month }}</p>
                 {% endif %}
             </div>
         </section>

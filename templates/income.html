@@ -72,8 +72,8 @@
     </div>
 
     {% if edit_source %}
-    <details open>
-        <summary>Edit Income Source</summary>
+    <div class="edit-form-section">
+        <h3>Edit Income Source</h3>
         <form method="post" action="{{ url_for('income_source_edit', row_id=edit_source.id) }}" class="stacked-form" id="income-source-form">
             <label>Owner
                 <input type="text" name="owner" value="{{ edit_source.owner }}" required placeholder="Caleb">
@@ -121,7 +121,7 @@
             <button type="submit">Save Changes</button>
             <a href="{{ url_for('income_page') }}" class="btn-secondary">Cancel</a>
         </form>
-    </details>
+    </div>
     {% else %}
     <details open>
         <summary>Add Income Source</summary>
@@ -220,8 +220,8 @@
     </div>
 
     {% if edit_actual %}
-    <details open>
-        <summary>Edit Income Entry</summary>
+    <div class="edit-form-section">
+        <h3>Edit Income Entry</h3>
         <form method="post" action="{{ url_for('income_actual_edit', row_id=edit_actual.id) }}" class="stacked-form">
             <label>Source
                 <select name="income_source_id" required>
@@ -245,7 +245,7 @@
             <button type="submit">Save Changes</button>
             <a href="{{ url_for('income_page', month=month) }}" class="btn-secondary">Cancel</a>
         </form>
-    </details>
+    </div>
     {% else %}
     <details open>
         <summary>Log Actual Income</summary>

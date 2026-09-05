@@ -468,8 +468,18 @@ code {
 
 .snapshot-panel h2 {
     font-size: 1rem;
-    margin: 0 0 1rem 0;
+    margin: 0.8rem 0 1rem 0;
     color: var(--text);
+}
+
+.snapshot-month-picker {
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.8rem;
+}
+
+.snapshot-month-picker input {
+    font-size: 0.9rem;
 }
 
 .snapshot-section {
@@ -642,6 +652,31 @@ th.desc .sort-indicator {
     opacity: 1;
 }
 
+/* ---------- Edit form sections ---------- */
+.edit-form-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 0;
+    margin-top: 1rem;
+}
+
+.edit-form-section h3 {
+    background: #FFF9F5;
+    border-bottom: 2px solid var(--accent);
+    padding: 0.9rem 1.1rem;
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.edit-form-section .stacked-form {
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
 /* ---------- Form improvements ---------- */
 label.checkbox-label {
     flex-direction: row;
@@ -692,6 +727,10 @@ label.checkbox-label input[type="checkbox"] {
 
     .snapshot-section {
         margin-bottom: 0;
+    }
+
+    .snapshot-panel input[type="month"] {
+        font-size: 0.9rem;
     }
 }
 

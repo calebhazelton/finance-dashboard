@@ -58,8 +58,8 @@
     </div>
 
     {% if edit_category %}
-    <details open>
-        <summary>Edit Expense Category</summary>
+    <div class="edit-form-section">
+        <h3>Edit Expense Category</h3>
         <form method="post" action="{{ url_for('expense_category_edit', row_id=edit_category.id) }}" class="stacked-form">
             <label>Category Name
                 <input type="text" name="name" value="{{ edit_category.name }}" required placeholder="Groceries, Car Insurance">
@@ -82,7 +82,7 @@
             <button type="submit">Save Changes</button>
             <a href="{{ url_for('expenses_page') }}" class="btn-secondary">Cancel</a>
         </form>
-    </details>
+    </div>
     {% else %}
     <details open>
         <summary>Add Expense Category</summary>
@@ -145,8 +145,8 @@
     </div>
 
     {% if edit_actual %}
-    <details open>
-        <summary>Edit Expense Entry</summary>
+    <div class="edit-form-section">
+        <h3>Edit Expense Entry</h3>
         <form method="post" action="{{ url_for('expense_actual_edit', row_id=edit_actual.id) }}" class="stacked-form">
             <label>Category
                 <select name="category_id" required>
@@ -168,7 +168,7 @@
             <button type="submit">Save Changes</button>
             <a href="{{ url_for('expenses_page', month=month) }}" class="btn-secondary">Cancel</a>
         </form>
-    </details>
+    </div>
     {% else %}
     <details open>
         <summary>Log an Expense</summary>

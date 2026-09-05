@@ -43,11 +43,11 @@ def create_app():
         net_worth = total_investments - total_debt
         leftover = total_income_monthly - total_expenses_monthly - total_min_debt_payments
 
-        # Get current month for snapshot
-        current_month = helpers.current_month()
+        # Get snapshot month (default to current month)
+        snapshot_month = request.args.get("snapshot_month") or helpers.current_month()
         
-        # Get income breakdown for current month
-        income_actuals = crud.list_rows("income_actuals", {"month": current_month})
+        # Get income breakdown for snapshot month
+        income_actuals = crud.list_rows("income_actuals", {"month": snapshot_month})
         income_by_source = {}
         total_actual_income = 0
         for a in income_actuals:
@@ -57,8 +57,8 @@ def create_app():
                 income_by_source[source_name] = (income_by_source.get(source_name, 0) or 0) + (a["net_actual"] or 0)
                 total_actual_income += (a["net_actual"] or 0)
 
-        # Get expense breakdown for current month
-        expense_actuals = crud.list_rows("expense_actuals", {"month": current_month})
+        # Get expense breakdown for snapshot month
+        expense_actuals = crud.list_rows("expense_actuals", {"month": snapshot_month})
         expense_by_category = {}
         total_actual_expenses = 0
         for a in expense_actuals:
@@ -78,7 +78,7 @@ def create_app():
             leftover=leftover,
             debts=debts,
             accounts=accounts,
-            current_month=current_month,
+            snapshot_month=snapshot_month,
             total_actual_income=total_actual_income,
             total_actual_expenses=total_actual_expenses,
             income_by_source=income_by_source,
