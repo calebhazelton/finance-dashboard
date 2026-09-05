@@ -170,7 +170,7 @@
         </form>
     </div>
     {% else %}
-    <details open>
+    <details open id="log-expense">
         <summary>Log an Expense</summary>
         <form method="post" action="{{ url_for('expense_actual_create') }}" class="stacked-form">
             <label>Category
@@ -268,8 +268,10 @@ function sortTable(th, colIndex) {
 // Scroll to edit form if editing
 window.addEventListener('load', function() {
     const editForm = document.getElementById('edit-form');
-    if (editForm) {
-        editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const logForm = document.getElementById('log-expense');
+    const target = editForm || (logForm && document.querySelector('.flashes') ? logForm : null);
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 });
 </script>
