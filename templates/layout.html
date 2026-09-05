@@ -29,6 +29,9 @@
                 <a href="{{ url_for('investments_page') }}" class="{{ 'active' if request.path == url_for('investments_page') else '' }}">
                     Investments
                 </a>
+                <a href="{{ url_for('snapshot_page') }}" class="{{ 'active' if request.path == url_for('snapshot_page') else '' }}">
+                    Snapshot
+                </a>
             </nav>
         </aside>
         <div class="content">

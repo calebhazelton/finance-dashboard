@@ -442,10 +442,10 @@ code {
     border-color: var(--accent);
 }
 
-/* ---------- Dashboard layout with snapshot panel ---------- */
+/* ---------- Dashboard layout ---------- */
 .dashboard-layout {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr;
     gap: 1.5rem;
     align-items: start;
 }

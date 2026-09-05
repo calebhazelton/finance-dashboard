@@ -342,14 +342,16 @@ function sortTable(th, colIndex) {
         return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
     });
     
-    // Re-insert sorted rows back into the table
+    // Re-insert sorted rows back into the table in correct order
     const container = allRows[0]?.parentNode || tbody;
-    const firstDataRow = dataRows[0];
-    if (firstDataRow) {
-        dataRows.forEach((row, index) => {
-            container.insertBefore(row, firstDataRow);
-        });
-    }
+    const firstNonDataRow = allRows.find(row => !row.hasAttribute('data-date') && !row.hasAttribute('data-gross'));
+    dataRows.forEach(row => {
+        if (firstNonDataRow) {
+            container.insertBefore(row, firstNonDataRow);
+        } else {
+            container.appendChild(row);
+        }
+    });
 }
 
 // Scroll to edit form if editing
