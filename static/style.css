@@ -554,6 +554,164 @@ code {
     margin: 0;
 }
 
+/* ---------- Full-page snapshot layout ---------- */
+.snapshot-header-form {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+    padding: 0;
+}
+
+.snapshot-header-form label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 550;
+    color: var(--text);
+    margin: 0;
+}
+
+.snapshot-header-form input[type="month"] {
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.snapshot-header-form input[type="month"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.snapshot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.snapshot-section-large,
+.snapshot-section-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem 1.3rem;
+}
+
+.snapshot-section-large h2,
+.snapshot-section-summary h2 {
+    font-size: 1.15rem;
+    margin: 0 0 1rem 0;
+    color: var(--text);
+}
+
+.snapshot-section-summary {
+    grid-column: 1 / -1;
+}
+
+.breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    background: #FAFBFC;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    gap: 1rem;
+}
+
+.breakdown-row.breakdown-total {
+    background: var(--accent-soft);
+    font-weight: 600;
+    border: 1px solid #BFE0D8;
+    padding: 0.95rem 1rem;
+}
+
+.breakdown-row.breakdown-total.positive {
+    background: var(--positive-soft);
+    border-color: #BFE0D8;
+}
+
+.breakdown-row.breakdown-total.negative {
+    background: var(--negative-soft);
+    border-color: #F5E8E8;
+}
+
+.breakdown-label {
+    color: var(--text-muted);
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.breakdown-value {
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.breakdown-row.breakdown-total .breakdown-label,
+.breakdown-row.breakdown-total .breakdown-value {
+    color: var(--text);
+}
+
+.summary-blocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.summary-block {
+    background: linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 100%);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.3rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: center;
+    text-align: center;
+}
+
+.summary-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.summary-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+}
+
+.summary-block.positive .summary-value {
+    color: var(--positive);
+}
+
+.summary-block.negative .summary-value {
+    color: var(--negative);
+}
+
 /* ---------- Button styles ---------- */
 .btn-small {
     display: inline-block;
@@ -740,6 +898,19 @@ label.checkbox-label input[type="checkbox"] {
     .snapshot-panel input[type="month"] {
         font-size: 0.9rem;
     }
+
+    .snapshot-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .snapshot-section-large,
+    .snapshot-section-summary {
+        padding: 1.2rem 1rem;
+    }
+
+    .summary-blocks {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 720px) {
@@ -866,6 +1037,33 @@ label.checkbox-label input[type="checkbox"] {
     
     .month-picker input {
         font-size: 0.9rem;
+    }
+
+    .snapshot-header-form {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.6rem;
+    }
+
+    .snapshot-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-blocks {
+        grid-template-columns: 1fr;
+    }
+
+    .breakdown-row {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.9rem;
+    }
+
+    .summary-block {
+        padding: 1.1rem 0.9rem;
+    }
+
+    .summary-value {
+        font-size: 1.5rem;
     }
 }
 

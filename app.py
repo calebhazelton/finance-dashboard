@@ -51,8 +51,27 @@ def create_app():
         net_worth = total_investments - total_debt
         leftover = total_income_monthly - total_expenses_monthly - total_min_debt_payments
 
+        return render_template(
+            "base.html",
+            net_worth=net_worth,
+            total_debt=total_debt,
+            total_investments=total_investments,
+            total_income_monthly=total_income_monthly,
+            total_expenses_monthly=total_expenses_monthly,
+            leftover=leftover,
+            debts=debts,
+            accounts=accounts,
+        )
+
+    # ---------- Snapshot page ----------
+
+    @app.route("/snapshot")
+    def snapshot_page():
+        income_sources = crud.list_rows("income_sources")
+        categories = crud.list_rows("expense_categories")
+        
         # Get snapshot month (default to current month)
-        snapshot_month = request.args.get("snapshot_month") or helpers.current_month()
+        snapshot_month = request.args.get("month") or helpers.current_month()
         
         # Get income breakdown for snapshot month
         income_actuals = crud.list_rows("income_actuals", {"month": snapshot_month})
@@ -77,15 +96,7 @@ def create_app():
                 total_actual_expenses += a["amount_actual"]
 
         return render_template(
-            "base.html",
-            net_worth=net_worth,
-            total_debt=total_debt,
-            total_investments=total_investments,
-            total_income_monthly=total_income_monthly,
-            total_expenses_monthly=total_expenses_monthly,
-            leftover=leftover,
-            debts=debts,
-            accounts=accounts,
+            "snapshot.html",
             snapshot_month=snapshot_month,
             total_actual_income=total_actual_income,
             total_actual_expenses=total_actual_expenses,

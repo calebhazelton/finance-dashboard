@@ -43,77 +43,9 @@
             <a href="{{ url_for('income_page') }}">Income</a> ·
             <a href="{{ url_for('expenses_page') }}">Expenses</a> ·
             <a href="{{ url_for('debts_page') }}">Debts</a> ·
-            <a href="{{ url_for('investments_page') }}">Investments</a>
+            <a href="{{ url_for('investments_page') }}">Investments</a> ·
+            <a href="{{ url_for('snapshot_page') }}">Snapshot</a>
         </p>
     </div>
-
-    <aside class="snapshot-panel">
-        <div class="snapshot-month-picker">
-            <form method="get" action="{{ url_for('index') }}" style="display: flex; gap: 0.5rem; align-items: center;">
-                <label for="snapshot_month" style="font-size: 0.85rem; font-weight: 550; color: var(--text-muted); white-space: nowrap;">Snapshot month:</label>
-                <input type="month" id="snapshot_month" name="snapshot_month" value="{{ snapshot_month }}" onchange="this.form.submit()" style="padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;">
-            </form>
-        </div>
-
-        <h2>Monthly Snapshot - {{ snapshot_month }}</h2>
-        
-        <section class="snapshot-section">
-            <h3>Income Breakdown</h3>
-            <div class="snapshot-list">
-                {% if income_by_source %}
-                    {% for source, amount in income_by_source.items() | sort %}
-                    <div class="snapshot-item">
-                        <span class="snapshot-label">{{ source }}</span>
-                        <span class="snapshot-value">{{ amount | money }}</span>
-                    </div>
-                    {% endfor %}
-                    <div class="snapshot-item snapshot-total">
-                        <span class="snapshot-label">Total Actual</span>
-                        <span class="snapshot-value">{{ total_actual_income | money }}</span>
-                    </div>
-                {% else %}
-                    <p class="snapshot-empty">No income logged for {{ snapshot_month }}</p>
-                {% endif %}
-            </div>
-        </section>
-
-        <section class="snapshot-section">
-            <h3>Expense Breakdown</h3>
-            <div class="snapshot-list">
-                {% if expense_by_category %}
-                    {% for category, amount in expense_by_category.items() | sort %}
-                    <div class="snapshot-item">
-                        <span class="snapshot-label">{{ category }}</span>
-                        <span class="snapshot-value">{{ amount | money }}</span>
-                    </div>
-                    {% endfor %}
-                    <div class="snapshot-item snapshot-total">
-                        <span class="snapshot-label">Total Actual</span>
-                        <span class="snapshot-value">{{ total_actual_expenses | money }}</span>
-                    </div>
-                {% else %}
-                    <p class="snapshot-empty">No expenses logged for {{ snapshot_month }}</p>
-                {% endif %}
-            </div>
-        </section>
-
-        <section class="snapshot-section">
-            <h3>Monthly Summary</h3>
-            <div class="snapshot-list">
-                <div class="snapshot-item">
-                    <span class="snapshot-label">Total Income</span>
-                    <span class="snapshot-value">{{ total_actual_income | money }}</span>
-                </div>
-                <div class="snapshot-item">
-                    <span class="snapshot-label">Total Expenses</span>
-                    <span class="snapshot-value">{{ total_actual_expenses | money }}</span>
-                </div>
-                <div class="snapshot-item snapshot-total {{ 'positive' if (total_actual_income - total_actual_expenses) >= 0 else 'negative' }}">
-                    <span class="snapshot-label">Net Cash Flow</span>
-                    <span class="snapshot-value">{{ (total_actual_income - total_actual_expenses) | money }}</span>
-                </div>
-            </div>
-        </section>
-    </aside>
 </div>
 {% endblock %}

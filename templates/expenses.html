@@ -215,20 +215,32 @@ function sortTable(th, colIndex) {
         indicator.textContent = isAsc ? ' ▼' : ' ▲';
     }
     
-    const rows = Array.from(tbody.querySelectorAll('tr:not([style*="display: none"])'));
-    const headerRow = rows[0];
-    const dataRows = rows.slice(1);
+    // Get all rows, then filter to only data rows (those with data-date or data-amount attributes)
+    const allRows = Array.from(tbody.querySelectorAll('tr'));
+    const dataRows = allRows.filter(row => row.hasAttribute('data-date') || row.hasAttribute('data-amount'));
+    
+    // Define column to data attribute mapping
+    const columnMap = {
+        0: 'data-date',
+        2: 'data-amount'
+    };
+    
+    const dataAttr = columnMap[colIndex];
     
     dataRows.sort((a, b) => {
         let aVal, bVal;
         
-        const aCell = a.cells[colIndex];
-        const bCell = b.cells[colIndex];
-        
-        if (!aCell || !bCell) return 0;
-        
-        aVal = aCell.textContent.trim();
-        bVal = bCell.textContent.trim();
+        // Use data attributes if available, otherwise fall back to cell text
+        if (dataAttr && a.hasAttribute(dataAttr) && b.hasAttribute(dataAttr)) {
+            aVal = a.getAttribute(dataAttr);
+            bVal = b.getAttribute(dataAttr);
+        } else {
+            const aCell = a.cells[colIndex];
+            const bCell = b.cells[colIndex];
+            if (!aCell || !bCell) return 0;
+            aVal = aCell.textContent.trim();
+            bVal = bCell.textContent.trim();
+        }
         
         // Try numeric sort
         const aNum = parseFloat(aVal.replace(/[$,]/g, ''));
@@ -247,7 +259,14 @@ function sortTable(th, colIndex) {
         return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
     });
     
-    dataRows.forEach(row => tbody.appendChild(row));
+    // Re-insert sorted rows back into the table
+    const container = allRows[0]?.parentNode || tbody;
+    const firstDataRow = dataRows[0];
+    if (firstDataRow) {
+        dataRows.forEach((row, index) => {
+            container.insertBefore(row, firstDataRow);
+        });
+    }
 }
 
 // Scroll to edit form if editing

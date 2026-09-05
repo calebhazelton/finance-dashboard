@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}Snapshot - Finance Dashboard{% endblock %}
+{% block content %}
+<h1>Monthly Snapshot</h1>
+
+<form method="get" action="{{ url_for('snapshot_page') }}" class="snapshot-header-form">
+    <label>Viewing month:
+        <input type="month" name="month" value="{{ snapshot_month }}" onchange="this.form.submit()">
+    </label>
+</form>
+
+<div class="snapshot-grid">
+    <section class="snapshot-section-large">
+        <h2>Income Breakdown - {{ snapshot_month }}</h2>
+        {% if income_by_source %}
+        <div class="breakdown-list">
+            {% for source, amount in income_by_source.items() | sort %}
+            <div class="breakdown-row">
+                <span class="breakdown-label">{{ source }}</span>
+                <span class="breakdown-value">{{ amount | money }}</span>
+            </div>
+            {% endfor %}
+            <div class="breakdown-row breakdown-total">
+                <span class="breakdown-label">Total Income</span>
+                <span class="breakdown-value">{{ total_actual_income | money }}</span>
+            </div>
+        </div>
+        {% else %}
+        <p class="snapshot-empty">No income logged for {{ snapshot_month }}</p>
+        {% endif %}
+    </section>
+
+    <section class="snapshot-section-large">
+        <h2>Expense Breakdown - {{ snapshot_month }}</h2>
+        {% if expense_by_category %}
+        <div class="breakdown-list">
+            {% for category, amount in expense_by_category.items() | sort %}
+            <div class="breakdown-row">
+                <span class="breakdown-label">{{ category }}</span>
+                <span class="breakdown-value">{{ amount | money }}</span>
+            </div>
+            {% endfor %}
+            <div class="breakdown-row breakdown-total">
+                <span class="breakdown-label">Total Expenses</span>
+                <span class="breakdown-value">{{ total_actual_expenses | money }}</span>
+            </div>
+        </div>
+        {% else %}
+        <p class="snapshot-empty">No expenses logged for {{ snapshot_month }}</p>
+        {% endif %}
+    </section>
+
+    <section class="snapshot-section-summary">
+        <h2>Monthly Summary</h2>
+        <div class="summary-blocks">
+            <div class="summary-block">
+                <span class="summary-label">Total Income</span>
+                <span class="summary-value">{{ total_actual_income | money }}</span>
+            </div>
+            <div class="summary-block">
+                <span class="summary-label">Total Expenses</span>
+                <span class="summary-value">{{ total_actual_expenses | money }}</span>
+            </div>
+            <div class="summary-block {{ 'positive' if (total_actual_income - total_actual_expenses) >= 0 else 'negative' }}">
+                <span class="summary-label">Net Cash Flow</span>
+                <span class="summary-value">{{ (total_actual_income - total_actual_expenses) | money }}</span>
+            </div>
+            {% if total_actual_income > 0 %}
+            <div class="summary-block">
+                <span class="summary-label">Savings Rate</span>
+                <span class="summary-value">{{ "%.1f%%"|format((total_actual_income - total_actual_expenses) / total_actual_income * 100) }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}
