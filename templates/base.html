@@ -3,44 +3,110 @@
 {% block content %}
 <h1>Dashboard</h1>
 
-<div class="tile-grid">
-    <div class="tile accent-teal">
-        <span class="tile-label">Net Worth</span>
-        <span class="tile-value">${{ "%.2f"|format(net_worth) }}</span>
-        <span class="tile-sub">Investments minus debt</span>
-    </div>
-    <div class="tile accent-red">
-        <span class="tile-label">Total Debt</span>
-        <span class="tile-value">${{ "%.2f"|format(total_debt) }}</span>
-        <span class="tile-sub">{{ debts|length }} debt{{ "s" if debts|length != 1 else "" }}</span>
-    </div>
-    <div class="tile accent-teal">
-        <span class="tile-label">Total Investments</span>
-        <span class="tile-value">${{ "%.2f"|format(total_investments) }}</span>
-        <span class="tile-sub">{{ accounts|length }} account{{ "s" if accounts|length != 1 else "" }}</span>
-    </div>
-    <div class="tile">
-        <span class="tile-label">Monthly Expected Income</span>
-        <span class="tile-value">${{ "%.2f"|format(total_income_monthly) }}</span>
-        <span class="tile-sub">Net of estimated taxes</span>
-    </div>
-    <div class="tile">
-        <span class="tile-label">Monthly Budgeted Expenses</span>
-        <span class="tile-value">${{ "%.2f"|format(total_expenses_monthly) }}</span>
-        <span class="tile-sub">All bills normalized to monthly</span>
-    </div>
-    <div class="tile {{ 'accent-teal' if leftover >= 0 else 'accent-red' }}">
-        <span class="tile-label">Est. Monthly Leftover</span>
-        <span class="tile-value">${{ "%.2f"|format(leftover) }}</span>
-        <span class="tile-sub">After expenses + minimum debt payments</span>
-    </div>
-</div>
+<div class="dashboard-layout">
+    <div class="main-content">
+        <div class="tile-grid">
+            <div class="tile accent-teal">
+                <span class="tile-label">Net Worth</span>
+                <span class="tile-value">${{ "%.2f"|format(net_worth) }}</span>
+                <span class="tile-sub">Investments minus debt</span>
+            </div>
+            <div class="tile accent-red">
+                <span class="tile-label">Total Debt</span>
+                <span class="tile-value">${{ "%.2f"|format(total_debt) }}</span>
+                <span class="tile-sub">{{ debts|length }} debt{{ "s" if debts|length != 1 else "" }}</span>
+            </div>
+            <div class="tile accent-teal">
+                <span class="tile-label">Total Investments</span>
+                <span class="tile-value">${{ "%.2f"|format(total_investments) }}</span>
+                <span class="tile-sub">{{ accounts|length }} account{{ "s" if accounts|length != 1 else "" }}</span>
+            </div>
+            <div class="tile">
+                <span class="tile-label">Monthly Expected Income</span>
+                <span class="tile-value">${{ "%.2f"|format(total_income_monthly) }}</span>
+                <span class="tile-sub">Net of estimated taxes</span>
+            </div>
+            <div class="tile">
+                <span class="tile-label">Monthly Budgeted Expenses</span>
+                <span class="tile-value">${{ "%.2f"|format(total_expenses_monthly) }}</span>
+                <span class="tile-sub">All bills normalized to monthly</span>
+            </div>
+            <div class="tile {{ 'accent-teal' if leftover >= 0 else 'accent-red' }}">
+                <span class="tile-label">Est. Monthly Leftover</span>
+                <span class="tile-value">${{ "%.2f"|format(leftover) }}</span>
+                <span class="tile-sub">After expenses + minimum debt payments</span>
+            </div>
+        </div>
 
-<p class="dashboard-note">
-    Jump to:
-    <a href="{{ url_for('income_page') }}">Income</a> ·
-    <a href="{{ url_for('expenses_page') }}">Expenses</a> ·
-    <a href="{{ url_for('debts_page') }}">Debts</a> ·
-    <a href="{{ url_for('investments_page') }}">Investments</a>
-</p>
+        <p class="dashboard-note">
+            Jump to:
+            <a href="{{ url_for('income_page') }}">Income</a> ·
+            <a href="{{ url_for('expenses_page') }}">Expenses</a> ·
+            <a href="{{ url_for('debts_page') }}">Debts</a> ·
+            <a href="{{ url_for('investments_page') }}">Investments</a>
+        </p>
+    </div>
+
+    <aside class="snapshot-panel">
+        <h2>Monthly Snapshot - {{ current_month }}</h2>
+        
+        <section class="snapshot-section">
+            <h3>Income Breakdown</h3>
+            <div class="snapshot-list">
+                {% if income_by_source %}
+                    {% for source, amount in income_by_source.items() | sort %}
+                    <div class="snapshot-item">
+                        <span class="snapshot-label">{{ source }}</span>
+                        <span class="snapshot-value">${{ "%.2f"|format(amount) }}</span>
+                    </div>
+                    {% endfor %}
+                    <div class="snapshot-item snapshot-total">
+                        <span class="snapshot-label">Total Actual</span>
+                        <span class="snapshot-value">${{ "%.2f"|format(total_actual_income) }}</span>
+                    </div>
+                {% else %}
+                    <p class="snapshot-empty">No income logged for {{ current_month }}</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="snapshot-section">
+            <h3>Expense Breakdown</h3>
+            <div class="snapshot-list">
+                {% if expense_by_category %}
+                    {% for category, amount in expense_by_category.items() | sort %}
+                    <div class="snapshot-item">
+                        <span class="snapshot-label">{{ category }}</span>
+                        <span class="snapshot-value">${{ "%.2f"|format(amount) }}</span>
+                    </div>
+                    {% endfor %}
+                    <div class="snapshot-item snapshot-total">
+                        <span class="snapshot-label">Total Actual</span>
+                        <span class="snapshot-value">${{ "%.2f"|format(total_actual_expenses) }}</span>
+                    </div>
+                {% else %}
+                    <p class="snapshot-empty">No expenses logged for {{ current_month }}</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="snapshot-section">
+            <h3>Monthly Summary</h3>
+            <div class="snapshot-list">
+                <div class="snapshot-item">
+                    <span class="snapshot-label">Total Income</span>
+                    <span class="snapshot-value">${{ "%.2f"|format(total_actual_income) }}</span>
+                </div>
+                <div class="snapshot-item">
+                    <span class="snapshot-label">Total Expenses</span>
+                    <span class="snapshot-value">${{ "%.2f"|format(total_actual_expenses) }}</span>
+                </div>
+                <div class="snapshot-item snapshot-total {{ 'positive' if (total_actual_income - total_actual_expenses) >= 0 else 'negative' }}">
+                    <span class="snapshot-label">Net Cash Flow</span>
+                    <span class="snapshot-value">${{ "%.2f"|format(total_actual_income - total_actual_expenses) }}</span>
+                </div>
+            </div>
+        </section>
+    </aside>
+</div>
 {% endblock %}

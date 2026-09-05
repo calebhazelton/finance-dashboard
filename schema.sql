@@ -13,13 +13,15 @@ CREATE TABLE IF NOT EXISTS income_sources (
     hours_per_week REAL,                     -- only set when pay_type = 'hourly'
     expected_gross_monthly REAL NOT NULL,    -- for salary: entered directly. for hourly: rate * hours/week * 52/12
     effective_tax_rate REAL NOT NULL,        -- e.g. 0.22 for 22%
-    start_date TEXT
+    start_date TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1     -- 0 = inactive (archived), 1 = active
 );
 
 CREATE TABLE IF NOT EXISTS income_actuals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     income_source_id INTEGER NOT NULL,
     month TEXT NOT NULL,                     -- 'YYYY-MM'
+    income_date TEXT,                        -- 'YYYY-MM-DD'
     gross_actual REAL,
     net_actual REAL,
     FOREIGN KEY (income_source_id) REFERENCES income_sources(id) ON DELETE CASCADE

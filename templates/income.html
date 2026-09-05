@@ -29,13 +29,14 @@
 
 <section>
     <h2>Income Sources</h2>
+    <div class="table-scroll-x">
     <table>
         <tr>
             <th>Owner</th><th>Name</th><th>Type</th><th>Frequency</th>
-            <th>Expected Gross/mo</th><th>Tax Rate</th><th>Start Date</th><th></th>
+            <th>Expected Gross/mo</th><th>Tax Rate</th><th>Start Date</th><th>Status</th><th></th>
         </tr>
         {% for s in sources %}
-        <tr>
+        <tr class="{{ 'archived' if not s.get('is_active', 1) else '' }}">
             <td>{{ s.owner }}</td>
             <td>{{ s.name }}</td>
             <td>
@@ -50,17 +51,78 @@
             <td>{{ (s.effective_tax_rate * 100)|round(1) }}%</td>
             <td>{{ s.start_date or "-" }}</td>
             <td>
+                <form method="post" action="{{ url_for('income_source_toggle', row_id=s.id) }}" class="inline-form">
+                    <button type="submit" class="status-btn {{ 'active' if s.get('is_active', 1) else 'inactive' }}">
+                        {{ "Active" if s.get('is_active', 1) else "Inactive" }}
+                    </button>
+                </form>
+            </td>
+            <td class="action-cell">
+                <a href="{{ url_for('income_page', edit=s.id) }}" class="btn-small">Edit</a>
                 <form method="post" action="{{ url_for('income_source_delete', row_id=s.id) }}"
-                      onsubmit="return confirm('Delete this source? Its logged actuals are removed too.');">
-                    <button type="submit">Delete</button>
+                      onsubmit="return confirm('Delete this source? Its logged actuals are removed too.');" class="inline-form">
+                    <button type="submit" class="btn-small btn-danger">Delete</button>
                 </form>
             </td>
         </tr>
         {% else %}
-        <tr><td colspan="8">No income sources yet - add one below.</td></tr>
+        <tr><td colspan="9">No income sources yet - add one below.</td></tr>
         {% endfor %}
     </table>
+    </div>
 
+    {% if edit_source %}
+    <details open>
+        <summary>Edit Income Source</summary>
+        <form method="post" action="{{ url_for('income_source_edit', row_id=edit_source.id) }}" class="stacked-form" id="income-source-form">
+            <label>Owner
+                <input type="text" name="owner" value="{{ edit_source.owner }}" required placeholder="Caleb">
+            </label>
+            <label>Name
+                <input type="text" name="name" value="{{ edit_source.name }}" required placeholder="Primary Job">
+            </label>
+            <label>Pay Frequency
+                <select name="pay_frequency">
+                    <option value="weekly" {% if edit_source.pay_frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                    <option value="biweekly" {% if edit_source.pay_frequency == 'biweekly' %}selected{% endif %}>Biweekly</option>
+                    <option value="semimonthly" {% if edit_source.pay_frequency == 'semimonthly' %}selected{% endif %}>Semimonthly</option>
+                    <option value="monthly" {% if edit_source.pay_frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+                </select>
+            </label>
+            <label>Pay Type
+                <select name="pay_type" onchange="toggleIncomePayType(this)">
+                    <option value="salary" {% if edit_source.pay_type == 'salary' %}selected{% endif %}>Salary</option>
+                    <option value="hourly" {% if edit_source.pay_type == 'hourly' %}selected{% endif %}>Hourly</option>
+                </select>
+            </label>
+            <span class="salary-fields" style="display: {% if edit_source.pay_type == 'salary' %}contents{% else %}none{% endif %};">
+                <label>Expected Gross Monthly ($)
+                    <input type="number" step="0.01" name="expected_gross_monthly" value="{{ edit_source.expected_gross_monthly }}">
+                </label>
+            </span>
+            <span class="hourly-fields" style="display: {% if edit_source.pay_type == 'hourly' %}contents{% else %}none{% endif %};">
+                <label>Hourly Rate ($)
+                    <input type="number" step="0.01" name="hourly_rate" value="{{ edit_source.hourly_rate or '' }}">
+                </label>
+                <label>Hours per Week
+                    <input type="number" step="0.5" name="hours_per_week" value="{{ edit_source.hours_per_week or '' }}">
+                </label>
+            </span>
+            <label>Effective Tax Rate (e.g. 0.22 for 22%)
+                <input type="number" step="0.001" name="effective_tax_rate" value="{{ edit_source.effective_tax_rate }}" required>
+            </label>
+            <label>Start Date
+                <input type="date" name="start_date" value="{{ edit_source.start_date or '' }}">
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" name="is_active" {% if edit_source.get('is_active', 1) %}checked{% endif %}>
+                Active
+            </label>
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('income_page') }}" class="btn-secondary">Cancel</a>
+        </form>
+    </details>
+    {% else %}
     <details open>
         <summary>Add Income Source</summary>
         <form method="post" action="{{ url_for('income_source_create') }}" class="stacked-form" id="income-source-form">
@@ -106,6 +168,7 @@
             <button type="submit">Add Source</button>
         </form>
     </details>
+    {% endif %}
 
     <script>
         function toggleIncomePayType(select) {
@@ -125,39 +188,82 @@
 
 <section>
     <h2>Actual Income Logged - {{ month }}</h2>
-    <table>
-        <tr><th>Source</th><th>Gross Actual</th><th>Net Actual</th><th></th></tr>
-        {% for a in actuals %}
+    <div class="table-scroll-x">
+    <table class="sortable">
         <tr>
+            <th onclick="sortTable(this, 0)">Date <span class="sort-indicator"></span></th>
+            <th>Source</th>
+            <th onclick="sortTable(this, 2)">Gross Actual <span class="sort-indicator"></span></th>
+            <th onclick="sortTable(this, 3)">Net Actual <span class="sort-indicator"></span></th>
+            <th></th>
+        </tr>
+        {% for a in actuals %}
+        <tr data-date="{{ a.income_date or a.month }}" data-gross="{{ a.gross_actual or 0 }}" data-net="{{ a.net_actual or 0 }}">
+            <td>{{ a.income_date or a.month }}</td>
             <td>
-                {% for s in sources %}{% if s.id == a.income_source_id %}{{ s.name }} ({{ s.owner }}){% endif %}{% endfor %}
+                {% for s in sources %}{% if s.id == a.income_source_id %}{{ s.name }}{% if s.owner %} ({{ s.owner }}){% endif %}{% endif %}{% endfor %}
             </td>
             <td>{{ "$%.2f"|format(a.gross_actual) if a.gross_actual is not none else "-" }}</td>
             <td>{{ "$%.2f"|format(a.net_actual) if a.net_actual is not none else "-" }}</td>
-            <td>
-                <form method="post" action="{{ url_for('income_actual_delete', row_id=a.id) }}">
+            <td class="action-cell">
+                <a href="{{ url_for('income_page', edit_actual=a.id, month=month) }}" class="btn-small">Edit</a>
+                <form method="post" action="{{ url_for('income_actual_delete', row_id=a.id) }}" class="inline-form">
                     <input type="hidden" name="month" value="{{ month }}">
-                    <button type="submit">Delete</button>
+                    <button type="submit" class="btn-small btn-danger">Delete</button>
                 </form>
             </td>
         </tr>
         {% else %}
-        <tr><td colspan="4">Nothing logged for {{ month }} yet.</td></tr>
+        <tr><td colspan="5">Nothing logged for {{ month }} yet.</td></tr>
         {% endfor %}
     </table>
+    </div>
 
+    {% if edit_actual %}
+    <details open>
+        <summary>Edit Income Entry</summary>
+        <form method="post" action="{{ url_for('income_actual_edit', row_id=edit_actual.id) }}" class="stacked-form">
+            <label>Source
+                <select name="income_source_id" required>
+                    {% for s in sources %}
+                    <option value="{{ s.id }}" {% if s.id == edit_actual.income_source_id %}selected{% endif %}>{{ s.name }} ({{ s.owner }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Month
+                <input type="month" name="month" value="{{ month }}" required>
+            </label>
+            <label>Date
+                <input type="date" name="income_date" value="{{ edit_actual.income_date or '' }}">
+            </label>
+            <label>Gross Actual ($)
+                <input type="number" step="0.01" name="gross_actual" value="{{ edit_actual.gross_actual or '' }}">
+            </label>
+            <label>Net Actual ($)
+                <input type="number" step="0.01" name="net_actual" value="{{ edit_actual.net_actual or '' }}">
+            </label>
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('income_page', month=month) }}" class="btn-secondary">Cancel</a>
+        </form>
+    </details>
+    {% else %}
     <details open>
         <summary>Log Actual Income</summary>
         <form method="post" action="{{ url_for('income_actual_create') }}" class="stacked-form">
             <label>Source
                 <select name="income_source_id" required>
                     {% for s in sources %}
+                    {% if s.get('is_active', 1) %}
                     <option value="{{ s.id }}">{{ s.name }} ({{ s.owner }})</option>
+                    {% endif %}
                     {% endfor %}
                 </select>
             </label>
             <label>Month
                 <input type="month" name="month" value="{{ month }}" required>
+            </label>
+            <label>Date
+                <input type="date" name="income_date">
             </label>
             <label>Gross Actual ($)
                 <input type="number" step="0.01" name="gross_actual">
@@ -168,5 +274,62 @@
             <button type="submit">Log Income</button>
         </form>
     </details>
+    {% endif %}
 </section>
+
+<script>
+function sortTable(th, colIndex) {
+    const table = th.closest('table');
+    const tbody = table.querySelector('tbody') || table;
+    const isAsc = th.classList.contains('asc');
+    
+    // Remove sort indicators from all headers
+    table.querySelectorAll('th').forEach(h => {
+        h.classList.remove('asc', 'desc');
+        const ind = h.querySelector('.sort-indicator');
+        if (ind) ind.textContent = '';
+    });
+    
+    // Set current header sort indicator
+    th.classList.add(isAsc ? 'desc' : 'asc');
+    const indicator = th.querySelector('.sort-indicator');
+    if (indicator) {
+        indicator.textContent = isAsc ? ' ▼' : ' ▲';
+    }
+    
+    const rows = Array.from(tbody.querySelectorAll('tr:not([style*="display: none"])'));
+    const headerRow = rows[0];
+    const dataRows = rows.slice(1);
+    
+    dataRows.sort((a, b) => {
+        let aVal, bVal;
+        
+        const aCell = a.cells[colIndex];
+        const bCell = b.cells[colIndex];
+        
+        if (!aCell || !bCell) return 0;
+        
+        aVal = aCell.getAttribute('data-value') || aCell.textContent.trim();
+        bVal = bCell.getAttribute('data-value') || bCell.textContent.trim();
+        
+        // Try numeric sort
+        const aNum = parseFloat(aVal.replace(/[$,]/g, ''));
+        const bNum = parseFloat(bVal.replace(/[$,]/g, ''));
+        
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return isAsc ? bNum - aNum : aNum - bNum;
+        }
+        
+        // Date sort
+        if (aVal.match(/^\d{4}-\d{2}/) && bVal.match(/^\d{4}-\d{2}/)) {
+            return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+        }
+        
+        // String sort
+        return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+    });
+    
+    dataRows.forEach(row => tbody.appendChild(row));
+}
+</script>
 {% endblock %}

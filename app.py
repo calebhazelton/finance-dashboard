@@ -31,7 +31,7 @@ def create_app():
         categories = crud.list_rows("expense_categories")
 
         total_income_monthly = sum(
-            s["expected_gross_monthly"] * (1 - s["effective_tax_rate"]) for s in income_sources
+            s["expected_gross_monthly"] * (1 - s["effective_tax_rate"]) for s in income_sources if s.get("is_active", 1)
         )
         total_debt = sum(d["current_balance"] for d in debts)
         total_min_debt_payments = sum(d["min_payment"] for d in debts)
@@ -43,6 +43,31 @@ def create_app():
         net_worth = total_investments - total_debt
         leftover = total_income_monthly - total_expenses_monthly - total_min_debt_payments
 
+        # Get current month for snapshot
+        current_month = helpers.current_month()
+        
+        # Get income breakdown for current month
+        income_actuals = crud.list_rows("income_actuals", {"month": current_month})
+        income_by_source = {}
+        total_actual_income = 0
+        for a in income_actuals:
+            source = next((s for s in income_sources if s["id"] == a["income_source_id"]), None)
+            if source:
+                source_name = source["name"]
+                income_by_source[source_name] = (income_by_source.get(source_name, 0) or 0) + (a["net_actual"] or 0)
+                total_actual_income += (a["net_actual"] or 0)
+
+        # Get expense breakdown for current month
+        expense_actuals = crud.list_rows("expense_actuals", {"month": current_month})
+        expense_by_category = {}
+        total_actual_expenses = 0
+        for a in expense_actuals:
+            category = next((c for c in categories if c["id"] == a["category_id"]), None)
+            if category:
+                category_name = category["name"]
+                expense_by_category[category_name] = (expense_by_category.get(category_name, 0) or 0) + a["amount_actual"]
+                total_actual_expenses += a["amount_actual"]
+
         return render_template(
             "base.html",
             net_worth=net_worth,
@@ -53,6 +78,11 @@ def create_app():
             leftover=leftover,
             debts=debts,
             accounts=accounts,
+            current_month=current_month,
+            total_actual_income=total_actual_income,
+            total_actual_expenses=total_actual_expenses,
+            income_by_source=income_by_source,
+            expense_by_category=expense_by_category,
         )
 
     # ---------- Income page ----------
@@ -64,9 +94,15 @@ def create_app():
         actuals = crud.list_rows("income_actuals", {"month": month})
 
         expected_net_total = sum(
-            s["expected_gross_monthly"] * (1 - s["effective_tax_rate"]) for s in sources
+            s["expected_gross_monthly"] * (1 - s["effective_tax_rate"]) for s in sources if s.get("is_active", 1)
         )
         actual_net_total = sum(a["net_actual"] or 0 for a in actuals)
+
+        edit_source_id = request.args.get("edit", type=int)
+        edit_source = crud.get_row("income_sources", edit_source_id) if edit_source_id else None
+
+        edit_actual_id = request.args.get("edit_actual", type=int)
+        edit_actual = crud.get_row("income_actuals", edit_actual_id) if edit_actual_id else None
 
         return render_template(
             "income.html",
@@ -75,6 +111,8 @@ def create_app():
             month=month,
             expected_net_total=expected_net_total,
             actual_net_total=actual_net_total,
+            edit_source=edit_source,
+            edit_actual=edit_actual,
         )
 
     @app.route("/income/sources", methods=["POST"])
@@ -119,12 +157,60 @@ def create_app():
         flash("Income source deleted.")
         return redirect(url_for("income_page"))
 
+    @app.route("/income/sources/<int:row_id>/edit", methods=["POST"])
+    def income_source_edit(row_id):
+        pay_type = request.form.get("pay_type", "salary").strip() or "salary"
+        hourly_rate = request.form.get("hourly_rate", type=float)
+        hours_per_week = request.form.get("hours_per_week", type=float)
+        salary_input = request.form.get("expected_gross_monthly", type=float)
+
+        if pay_type == "hourly":
+            if hourly_rate is None or hours_per_week is None:
+                flash("Please provide an hourly rate and hours per week.")
+                return redirect(url_for("income_page"))
+            expected_gross_monthly = helpers.hourly_to_expected_gross_monthly(hourly_rate, hours_per_week)
+        else:
+            if salary_input is None:
+                flash("Please provide an expected gross monthly amount.")
+                return redirect(url_for("income_page"))
+            expected_gross_monthly = salary_input
+
+        data = {
+            "owner": request.form.get("owner", "").strip(),
+            "name": request.form.get("name", "").strip(),
+            "pay_frequency": request.form.get("pay_frequency", "").strip(),
+            "pay_type": pay_type,
+            "hourly_rate": hourly_rate,
+            "hours_per_week": hours_per_week,
+            "expected_gross_monthly": expected_gross_monthly,
+            "effective_tax_rate": request.form.get("effective_tax_rate", type=float),
+            "start_date": request.form.get("start_date") or None,
+            "is_active": 1 if request.form.get("is_active") == "on" else 0,
+        }
+        if not data["owner"] or not data["name"] or data["effective_tax_rate"] is None:
+            flash("Please fill in owner, name, and tax rate.")
+            return redirect(url_for("income_page"))
+        crud.update_row("income_sources", row_id, data)
+        flash(f"Updated income source '{data['name']}'.")
+        return redirect(url_for("income_page"))
+
+    @app.route("/income/sources/<int:row_id>/toggle", methods=["POST"])
+    def income_source_toggle(row_id):
+        row = crud.get_row("income_sources", row_id)
+        new_status = 0 if row["is_active"] else 1
+        crud.update_row("income_sources", row_id, {"is_active": new_status})
+        status_text = "reactivated" if new_status else "archived"
+        flash(f"Income source {status_text}.")
+        return redirect(url_for("income_page"))
+
     @app.route("/income/actuals", methods=["POST"])
     def income_actual_create():
         month = request.form.get("month", "").strip()
+        income_date = request.form.get("income_date", "").strip()
         data = {
             "income_source_id": request.form.get("income_source_id", type=int),
             "month": month,
+            "income_date": income_date or None,
             "gross_actual": request.form.get("gross_actual", type=float),
             "net_actual": request.form.get("net_actual", type=float),
         }
@@ -133,6 +219,24 @@ def create_app():
             return redirect(url_for("income_page"))
         crud.create_row("income_actuals", data)
         flash("Logged actual income.")
+        return redirect(url_for("income_page", month=month))
+
+    @app.route("/income/actuals/<int:row_id>/edit", methods=["POST"])
+    def income_actual_edit(row_id):
+        month = request.form.get("month", "").strip()
+        income_date = request.form.get("income_date", "").strip()
+        data = {
+            "income_source_id": request.form.get("income_source_id", type=int),
+            "month": month,
+            "income_date": income_date or None,
+            "gross_actual": request.form.get("gross_actual", type=float),
+            "net_actual": request.form.get("net_actual", type=float),
+        }
+        if not data["income_source_id"] or not month:
+            flash("Please select an income source and month.")
+            return redirect(url_for("income_page", month=month))
+        crud.update_row("income_actuals", row_id, data)
+        flash("Updated income entry.")
         return redirect(url_for("income_page", month=month))
 
     @app.route("/income/actuals/<int:row_id>/delete", methods=["POST"])
@@ -161,6 +265,12 @@ def create_app():
         budget_total = sum(monthly_equiv_by_category.values())
         actual_total = sum(a["amount_actual"] for a in actuals)
 
+        edit_category_id = request.args.get("edit", type=int)
+        edit_category = crud.get_row("expense_categories", edit_category_id) if edit_category_id else None
+
+        edit_actual_id = request.args.get("edit_actual", type=int)
+        edit_actual = crud.get_row("expense_actuals", edit_actual_id) if edit_actual_id else None
+
         return render_template(
             "expenses.html",
             categories=categories,
@@ -172,6 +282,8 @@ def create_app():
             actual_total=actual_total,
             frequency_labels=helpers.FREQUENCY_LABELS,
             current_date=helpers.current_date(),
+            edit_category=edit_category,
+            edit_actual=edit_actual,
         )
 
     @app.route("/expenses/categories", methods=["POST"])
@@ -193,6 +305,21 @@ def create_app():
     def expense_category_delete(row_id):
         crud.delete_row("expense_categories", row_id)
         flash("Category deleted.")
+        return redirect(url_for("expenses_page"))
+
+    @app.route("/expenses/categories/<int:row_id>/edit", methods=["POST"])
+    def expense_category_edit(row_id):
+        data = {
+            "name": request.form.get("name", "").strip(),
+            "monthly_budget": request.form.get("monthly_budget", type=float),
+            "frequency": request.form.get("frequency", "monthly").strip() or "monthly",
+            "due_day": request.form.get("due_day", type=int),
+        }
+        if not data["name"] or data["monthly_budget"] is None:
+            flash("Please provide a category name and budget amount.")
+            return redirect(url_for("expenses_page"))
+        crud.update_row("expense_categories", row_id, data)
+        flash(f"Updated category '{data['name']}'.")
         return redirect(url_for("expenses_page"))
 
     @app.route("/expenses/actuals", methods=["POST"])
@@ -232,6 +359,37 @@ def create_app():
         crud.delete_row("expense_actuals", row_id)
         flash("Entry deleted.")
         return redirect(url_for("expenses_page", month=month))
+
+    @app.route("/expenses/actuals/<int:row_id>/edit", methods=["POST"])
+    def expense_actual_edit(row_id):
+        month = request.form.get("month", "").strip()
+        expense_date = request.form.get("expense_date", "").strip()
+        notes = request.form.get("notes", "").strip() or None
+
+        if not expense_date:
+            flash("Please provide a full expense date.")
+            return redirect(url_for("expenses_page", month=month or helpers.current_month()))
+
+        try:
+            parsed_date = date.fromisoformat(expense_date)
+        except ValueError:
+            flash("Please provide a valid expense date.")
+            return redirect(url_for("expenses_page", month=month or helpers.current_month()))
+
+        derived_month = parsed_date.strftime("%Y-%m")
+        data = {
+            "category_id": request.form.get("category_id", type=int),
+            "month": derived_month,
+            "expense_date": expense_date,
+            "amount_actual": request.form.get("amount_actual", type=float),
+            "notes": notes,
+        }
+        if not data["category_id"] or data["amount_actual"] is None:
+            flash("Please select a category, date, and amount.")
+            return redirect(url_for("expenses_page", month=derived_month))
+        crud.update_row("expense_actuals", row_id, data)
+        flash("Updated expense entry.")
+        return redirect(url_for("expenses_page", month=derived_month))
 
     # ---------- Debts page ----------
 

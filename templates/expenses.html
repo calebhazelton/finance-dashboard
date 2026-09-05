@@ -43,10 +43,11 @@
             <td>${{ "%.2f"|format(spent) }}</td>
             <td>${{ "%.2f"|format(monthly_equiv - spent) }}</td>
             <td>{{ c.due_day or "-" }}</td>
-            <td>
+            <td class="action-cell">
+                <a href="{{ url_for('expenses_page', edit=c.id) }}" class="btn-small">Edit</a>
                 <form method="post" action="{{ url_for('expense_category_delete', row_id=c.id) }}"
-                      onsubmit="return confirm('Delete this category? Its logged actuals are removed too.');">
-                    <button type="submit">Delete</button>
+                      onsubmit="return confirm('Delete this category? Its logged actuals are removed too.');" class="inline-form">
+                    <button type="submit" class="btn-small btn-danger">Delete</button>
                 </form>
             </td>
         </tr>
@@ -56,6 +57,33 @@
     </table>
     </div>
 
+    {% if edit_category %}
+    <details open>
+        <summary>Edit Expense Category</summary>
+        <form method="post" action="{{ url_for('expense_category_edit', row_id=edit_category.id) }}" class="stacked-form">
+            <label>Category Name
+                <input type="text" name="name" value="{{ edit_category.name }}" required placeholder="Groceries, Car Insurance">
+            </label>
+            <label>Budget Amount ($)
+                <input type="number" step="0.01" name="monthly_budget" value="{{ edit_category.monthly_budget }}" required>
+            </label>
+            <label>Frequency
+                <select name="frequency">
+                    <option value="weekly" {% if edit_category.frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                    <option value="biweekly" {% if edit_category.frequency == 'biweekly' %}selected{% endif %}>Biweekly</option>
+                    <option value="monthly" {% if edit_category.frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+                    <option value="semiannually" {% if edit_category.frequency == 'semiannually' %}selected{% endif %}>Semiannually</option>
+                    <option value="annually" {% if edit_category.frequency == 'annually' %}selected{% endif %}>Annually</option>
+                </select>
+            </label>
+            <label>Due Day (1-31, optional - for bills)
+                <input type="number" min="1" max="31" name="due_day" value="{{ edit_category.due_day or '' }}">
+            </label>
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('expenses_page') }}" class="btn-secondary">Cancel</a>
+        </form>
+    </details>
+    {% else %}
     <details open>
         <summary>Add Expense Category</summary>
         <form method="post" action="{{ url_for('expense_category_create') }}" class="stacked-form">
@@ -80,24 +108,33 @@
             <button type="submit">Add Category</button>
         </form>
     </details>
+    {% endif %}
 </section>
 
 <section>
     <h2>Expense Entries Logged - {{ month }}</h2>
-    <table>
-        <tr><th>Date</th><th>Category</th><th>Amount</th><th>Notes</th><th></th></tr>
-        {% for a in actuals %}
+    <div class="table-scroll-x">
+    <table class="sortable">
         <tr>
+            <th onclick="sortTable(this, 0)">Date <span class="sort-indicator"></span></th>
+            <th>Category</th>
+            <th onclick="sortTable(this, 2)">Amount <span class="sort-indicator"></span></th>
+            <th>Notes</th>
+            <th></th>
+        </tr>
+        {% for a in actuals %}
+        <tr data-date="{{ a.expense_date or a.month }}" data-amount="{{ a.amount_actual or 0 }}">
             <td>{{ a.expense_date or a.month }}</td>
             <td>
                 {% for c in categories %}{% if c.id == a.category_id %}{{ c.name }}{% endif %}{% endfor %}
             </td>
             <td>${{ "%.2f"|format(a.amount_actual) }}</td>
             <td>{{ a.notes or "-" }}</td>
-            <td>
-                <form method="post" action="{{ url_for('expense_actual_delete', row_id=a.id) }}">
+            <td class="action-cell">
+                <a href="{{ url_for('expenses_page', edit_actual=a.id, month=month) }}" class="btn-small">Edit</a>
+                <form method="post" action="{{ url_for('expense_actual_delete', row_id=a.id) }}" class="inline-form">
                     <input type="hidden" name="month" value="{{ month }}">
-                    <button type="submit">Delete</button>
+                    <button type="submit" class="btn-small btn-danger">Delete</button>
                 </form>
             </td>
         </tr>
@@ -105,7 +142,34 @@
         <tr><td colspan="5">Nothing logged for {{ month }} yet.</td></tr>
         {% endfor %}
     </table>
+    </div>
 
+    {% if edit_actual %}
+    <details open>
+        <summary>Edit Expense Entry</summary>
+        <form method="post" action="{{ url_for('expense_actual_edit', row_id=edit_actual.id) }}" class="stacked-form">
+            <label>Category
+                <select name="category_id" required>
+                    {% for c in categories %}
+                    <option value="{{ c.id }}" {% if c.id == edit_actual.category_id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Date
+                <input type="date" name="expense_date" value="{{ edit_actual.expense_date or '' }}" required>
+            </label>
+            <label>Amount ($)
+                <input type="number" step="0.01" name="amount_actual" value="{{ edit_actual.amount_actual or '' }}" required>
+            </label>
+            <label>Notes
+                <textarea name="notes" rows="3" placeholder="Groceries, gas, reimbursement, etc.">{{ edit_actual.notes or '' }}</textarea>
+            </label>
+            <input type="hidden" name="month" value="{{ month }}">
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('expenses_page', month=month) }}" class="btn-secondary">Cancel</a>
+        </form>
+    </details>
+    {% else %}
     <details open>
         <summary>Log an Expense</summary>
         <form method="post" action="{{ url_for('expense_actual_create') }}" class="stacked-form">
@@ -128,5 +192,62 @@
             <button type="submit">Log Expense</button>
         </form>
     </details>
+    {% endif %}
 </section>
+
+<script>
+function sortTable(th, colIndex) {
+    const table = th.closest('table');
+    const tbody = table.querySelector('tbody') || table;
+    const isAsc = th.classList.contains('asc');
+    
+    // Remove sort indicators from all headers
+    table.querySelectorAll('th').forEach(h => {
+        h.classList.remove('asc', 'desc');
+        const ind = h.querySelector('.sort-indicator');
+        if (ind) ind.textContent = '';
+    });
+    
+    // Set current header sort indicator
+    th.classList.add(isAsc ? 'desc' : 'asc');
+    const indicator = th.querySelector('.sort-indicator');
+    if (indicator) {
+        indicator.textContent = isAsc ? ' ▼' : ' ▲';
+    }
+    
+    const rows = Array.from(tbody.querySelectorAll('tr:not([style*="display: none"])'));
+    const headerRow = rows[0];
+    const dataRows = rows.slice(1);
+    
+    dataRows.sort((a, b) => {
+        let aVal, bVal;
+        
+        const aCell = a.cells[colIndex];
+        const bCell = b.cells[colIndex];
+        
+        if (!aCell || !bCell) return 0;
+        
+        aVal = aCell.textContent.trim();
+        bVal = bCell.textContent.trim();
+        
+        // Try numeric sort
+        const aNum = parseFloat(aVal.replace(/[$,]/g, ''));
+        const bNum = parseFloat(bVal.replace(/[$,]/g, ''));
+        
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return isAsc ? bNum - aNum : aNum - bNum;
+        }
+        
+        // Date sort
+        if (aVal.match(/^\d{4}-\d{2}/) && bVal.match(/^\d{4}-\d{2}/)) {
+            return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+        }
+        
+        // String sort
+        return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+    });
+    
+    dataRows.forEach(row => tbody.appendChild(row));
+}
+</script>
 {% endblock %}

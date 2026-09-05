@@ -442,19 +442,430 @@ code {
     border-color: var(--accent);
 }
 
+/* ---------- Dashboard layout with snapshot panel ---------- */
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.main-content {
+    min-width: 0;
+}
+
+.snapshot-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.2rem;
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+.snapshot-panel h2 {
+    font-size: 1rem;
+    margin: 0 0 1rem 0;
+    color: var(--text);
+}
+
+.snapshot-section {
+    margin-bottom: 1.4rem;
+}
+
+.snapshot-section h3 {
+    font-size: 0.9rem;
+    margin: 0 0 0.7rem 0;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-weight: 600;
+}
+
+.snapshot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.snapshot-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.7rem;
+    background: #FAFBFC;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.snapshot-item.snapshot-total {
+    background: var(--accent-soft);
+    font-weight: 600;
+    border: 1px solid #BFE0D8;
+}
+
+.snapshot-item.snapshot-total.positive {
+    background: var(--positive-soft);
+    border-color: #BFE0D8;
+}
+
+.snapshot-item.snapshot-total.negative {
+    background: var(--negative-soft);
+    border-color: #F5E8E8;
+}
+
+.snapshot-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.snapshot-value {
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.snapshot-empty {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 0.8rem 0;
+    margin: 0;
+}
+
+/* ---------- Button styles ---------- */
+.btn-small {
+    display: inline-block;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--accent);
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.btn-small:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
+
+.btn-danger {
+    color: var(--negative);
+}
+.btn-danger:hover {
+    background: var(--negative-soft);
+    border-color: var(--negative);
+}
+
+.btn-secondary {
+    display: inline-block;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 7px;
+    cursor: pointer;
+    text-decoration: none;
+}
+.btn-secondary:hover {
+    background: var(--bg);
+}
+
+.status-btn {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--surface);
+}
+
+.status-btn.active {
+    background: var(--positive-soft);
+    border-color: var(--positive);
+    color: var(--positive);
+}
+
+.status-btn.inactive {
+    background: #F5E8E8;
+    border-color: #D4A5A0;
+    color: #8B5A52;
+}
+
+.status-btn:hover {
+    opacity: 0.85;
+}
+
+/* ---------- Table cell styling ---------- */
+.action-cell {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+tr.archived {
+    opacity: 0.6;
+    background: #FAFBFC;
+}
+
+/* ---------- Sortable tables ---------- */
+table.sortable th {
+    cursor: pointer;
+    user-select: none;
+}
+
+table.sortable th:hover {
+    background: #EEEFF5;
+}
+
+.sort-indicator {
+    font-size: 0.7rem;
+    margin-left: 0.25rem;
+    opacity: 0.5;
+}
+
+th.asc .sort-indicator {
+    opacity: 1;
+}
+
+th.desc .sort-indicator {
+    opacity: 1;
+}
+
+/* ---------- Form improvements ---------- */
+label.checkbox-label {
+    flex-direction: row;
+    align-items: center;
+    font-weight: 550;
+    color: var(--text);
+    display: flex !important;
+}
+
+label.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.4rem;
+    cursor: pointer;
+}
+
+.stacked-form textarea {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    resize: vertical;
+}
+
+.stacked-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
 /* ---------- Small screens: collapse sidebar to a top bar ---------- */
+@media (max-width: 1024px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+    }
+
+    .snapshot-panel {
+        position: static;
+        max-height: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .snapshot-section {
+        margin-bottom: 0;
+    }
+}
+
 @media (max-width: 720px) {
+    html {
+        font-size: 100%; /* Smaller base font for mobile */
+    }
+
     .app-shell { flex-direction: column; }
+    
     .sidebar {
         width: 100%;
         height: auto;
         position: static;
         border-right: none;
         border-bottom: 1px solid var(--border);
-        padding: 1rem;
+        padding: 0.75rem;
     }
-    .sidebar nav { flex-direction: row; flex-wrap: wrap; }
-    main { padding: 1.5rem 1.25rem 3rem; }
-    .stacked-form { flex-direction: column; align-items: stretch; }
-    .stacked-form input, .stacked-form select { min-width: 0; }
+    
+    .brand {
+        margin-bottom: 1rem;
+    }
+    
+    .sidebar nav { 
+        flex-direction: row; 
+        flex-wrap: wrap;
+        gap: 0.1rem;
+    }
+    
+    .sidebar nav a {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    main { 
+        padding: 1.25rem 1rem 2.5rem; 
+        max-width: 100%;
+    }
+    
+    section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-grid {
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+    }
+    
+    .stat-card {
+        padding: 0.8rem 0.9rem;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .tile-grid {
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+    }
+    
+    .tile {
+        padding: 1.2rem 1.1rem;
+    }
+    
+    .stacked-form { 
+        flex-direction: column; 
+        align-items: stretch;
+        gap: 0.6rem;
+    }
+    
+    .stacked-form label {
+        font-size: 0.75rem;
+    }
+    
+    .stacked-form input, 
+    .stacked-form select,
+    .stacked-form textarea {
+        min-width: 0;
+        font-size: 0.9rem;
+        padding: 0.45rem 0.55rem;
+    }
+    
+    .stacked-form button {
+        height: 2.1rem;
+        font-size: 0.8rem;
+    }
+    
+    .table-scroll-x table {
+        min-width: 100%;
+        font-size: 0.85rem;
+    }
+    
+    th, td {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.85rem;
+    }
+    
+    .action-cell {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    
+    .btn-small {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .inline-form {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    
+    .inline-form button {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
+    }
+    
+    .inline-form input {
+        width: 100%;
+    }
+    
+    .month-picker input {
+        font-size: 0.9rem;
+    }
+}
+
+/* ---------- Extra small phones (< 480px) ---------- */
+@media (max-width: 480px) {
+    html {
+        font-size: 93.75%; /* ~15px base */
+    }
+
+    main {
+        padding: 1rem 0.75rem 2rem;
+    }
+
+    h1 {
+        font-size: 1.4rem;
+        margin-bottom: 0.8rem;
+    }
+
+    h2 {
+        font-size: 1rem;
+    }
+
+    .sidebar nav a {
+        padding: 0.3rem 0.4rem;
+        font-size: 0.75rem;
+    }
+
+    th, td {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    section > table,
+    section > details {
+        border-radius: 8px;
+    }
+
+    details summary {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.82rem;
+    }
+
+    .stat-card {
+        padding: 0.7rem 0.8rem;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+    }
 }
