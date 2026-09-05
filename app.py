@@ -18,6 +18,14 @@ def create_app():
 
     database.register_app(app)
 
+    # Add custom Jinja2 filter for money formatting
+    def format_money(value):
+        if value is None:
+            return "-"
+        return "${:,.2f}".format(float(value))
+    
+    app.jinja_env.filters['money'] = format_money
+
     with app.app_context():
         database.init_db(app)
 

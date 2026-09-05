@@ -64,12 +64,12 @@
                     {% for source, amount in income_by_source.items() | sort %}
                     <div class="snapshot-item">
                         <span class="snapshot-label">{{ source }}</span>
-                        <span class="snapshot-value">${{ "%.2f"|format(amount) }}</span>
+                        <span class="snapshot-value">{{ amount | money }}</span>
                     </div>
                     {% endfor %}
                     <div class="snapshot-item snapshot-total">
                         <span class="snapshot-label">Total Actual</span>
-                        <span class="snapshot-value">${{ "%.2f"|format(total_actual_income) }}</span>
+                        <span class="snapshot-value">{{ total_actual_income | money }}</span>
                     </div>
                 {% else %}
                     <p class="snapshot-empty">No income logged for {{ snapshot_month }}</p>
@@ -84,12 +84,12 @@
                     {% for category, amount in expense_by_category.items() | sort %}
                     <div class="snapshot-item">
                         <span class="snapshot-label">{{ category }}</span>
-                        <span class="snapshot-value">${{ "%.2f"|format(amount) }}</span>
+                        <span class="snapshot-value">{{ amount | money }}</span>
                     </div>
                     {% endfor %}
                     <div class="snapshot-item snapshot-total">
                         <span class="snapshot-label">Total Actual</span>
-                        <span class="snapshot-value">${{ "%.2f"|format(total_actual_expenses) }}</span>
+                        <span class="snapshot-value">{{ total_actual_expenses | money }}</span>
                     </div>
                 {% else %}
                     <p class="snapshot-empty">No expenses logged for {{ snapshot_month }}</p>
@@ -102,15 +102,15 @@
             <div class="snapshot-list">
                 <div class="snapshot-item">
                     <span class="snapshot-label">Total Income</span>
-                    <span class="snapshot-value">${{ "%.2f"|format(total_actual_income) }}</span>
+                    <span class="snapshot-value">{{ total_actual_income | money }}</span>
                 </div>
                 <div class="snapshot-item">
                     <span class="snapshot-label">Total Expenses</span>
-                    <span class="snapshot-value">${{ "%.2f"|format(total_actual_expenses) }}</span>
+                    <span class="snapshot-value">{{ total_actual_expenses | money }}</span>
                 </div>
                 <div class="snapshot-item snapshot-total {{ 'positive' if (total_actual_income - total_actual_expenses) >= 0 else 'negative' }}">
                     <span class="snapshot-label">Net Cash Flow</span>
-                    <span class="snapshot-value">${{ "%.2f"|format(total_actual_income - total_actual_expenses) }}</span>
+                    <span class="snapshot-value">{{ (total_actual_income - total_actual_expenses) | money }}</span>
                 </div>
             </div>
         </section>

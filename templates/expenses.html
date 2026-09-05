@@ -58,7 +58,7 @@
     </div>
 
     {% if edit_category %}
-    <div class="edit-form-section">
+    <div class="edit-form-section" id="edit-form">
         <h3>Edit Expense Category</h3>
         <form method="post" action="{{ url_for('expense_category_edit', row_id=edit_category.id) }}" class="stacked-form">
             <label>Category Name
@@ -145,7 +145,7 @@
     </div>
 
     {% if edit_actual %}
-    <div class="edit-form-section">
+    <div class="edit-form-section" id="edit-form">
         <h3>Edit Expense Entry</h3>
         <form method="post" action="{{ url_for('expense_actual_edit', row_id=edit_actual.id) }}" class="stacked-form">
             <label>Category
@@ -249,5 +249,13 @@ function sortTable(th, colIndex) {
     
     dataRows.forEach(row => tbody.appendChild(row));
 }
+
+// Scroll to edit form if editing
+window.addEventListener('load', function() {
+    const editForm = document.getElementById('edit-form');
+    if (editForm) {
+        editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+});
 </script>
 {% endblock %}
