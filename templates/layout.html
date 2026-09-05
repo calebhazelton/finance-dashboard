@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Finance Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        // Apply saved theme before the page renders to avoid a flash
+        (function() {
+            if (localStorage.getItem('theme') === 'dark')
+                document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
 </head>
 <body>
     <div class="app-shell">
@@ -33,6 +40,12 @@
                     Snapshot
                 </a>
             </nav>
+            <div class="sidebar-footer">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                    <span id="theme-label">Dark mode</span>
+                    <span id="theme-icon">🌙</span>
+                </button>
+            </div>
         </aside>
         <div class="content">
             <main>
@@ -49,5 +62,29 @@
             </main>
         </div>
     </div>
+    <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            syncToggleUI();
+        }
+
+        function syncToggleUI() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const label = document.getElementById('theme-label');
+            const icon = document.getElementById('theme-icon');
+            if (label) label.textContent = isDark ? 'Light mode' : 'Dark mode';
+            if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+        }
+
+        // Sync button label/icon on every page load
+        syncToggleUI();
+    </script>
 </body>
 </html>

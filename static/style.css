@@ -16,6 +16,49 @@
     --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
 }
 
+/* ---------- Dark mode tokens ---------- */
+[data-theme="dark"] {
+    --bg: #0F1117;
+    --surface: #1A1D27;
+    --border: #2A2D3A;
+    --text: #E8EAF0;
+    --text-muted: #8B90A0;
+    --accent: #2EBD9A;
+    --accent-hover: #26A888;
+    --accent-soft: #152E28;
+    --positive: #2EBD9A;
+    --positive-soft: #152E28;
+    --negative: #E05C55;
+    --negative-soft: #2E1515;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] th {
+    background: #1E2130;
+}
+
+[data-theme="dark"] .snapshot-item,
+[data-theme="dark"] .breakdown-row,
+[data-theme="dark"] .summary-block {
+    background: #1E2130;
+}
+
+[data-theme="dark"] .summary-block {
+    background: linear-gradient(135deg, #1E2130 0%, #1A1D27 100%);
+}
+
+[data-theme="dark"] .edit-form-section h3 {
+    background: #1E2130;
+}
+
+[data-theme="dark"] tr.archived {
+    background: #16181F;
+}
+
+[data-theme="dark"] table.sortable th:hover {
+    background: #252837;
+}
+
 html {
     font-size: 112.5%; /* 18px base instead of 16px -- everything below is rem-based, so this scales the whole app */
 }
@@ -54,6 +97,8 @@ h3 { font-size: 1.05rem; }
     position: sticky;
     top: 0;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .brand {
@@ -100,6 +145,37 @@ h3 { font-size: 1.05rem; }
     color: #C6CAD2;
     cursor: default;
     pointer-events: none;
+}
+
+/* ---------- Dark mode toggle ---------- */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 100%;
+    color: var(--text-muted);
+    font-weight: 550;
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+.theme-toggle:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+.theme-toggle-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
 }
 
 .content {
